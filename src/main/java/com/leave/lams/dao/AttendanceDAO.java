@@ -7,11 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.leave.lams.model.Attendance;
-import com.leave.lams.model.Employee;
 import com.leave.lams.repository.AttendanceRepository;
-import com.leave.lams.repository.EmployeeRepository;
 import com.leave.lams.service.AttendanceService;
-import com.leave.lams.service.EmployeeService;
 
 @Service
 public class AttendanceDAO implements AttendanceService {
