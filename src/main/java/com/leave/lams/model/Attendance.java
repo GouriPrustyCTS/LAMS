@@ -1,6 +1,6 @@
 package com.leave.lams.model;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
@@ -22,16 +22,16 @@ import lombok.NoArgsConstructor;
 public class Attendance {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long attendanceId;
+    private Long attendanceId; //id
     
     private LocalDateTime clockInTime;
     private LocalDateTime clockOutTime;
-    private Date attendanceDate;
+    private LocalDate attendanceDate;	//LocalDate
     
     @ManyToOne
     @JoinColumn(name = "employeeId", nullable = false)
     @JsonBackReference
     private Employee employee;
     
-    private Double workHours;
+    private Double workHours;	//double
 }
