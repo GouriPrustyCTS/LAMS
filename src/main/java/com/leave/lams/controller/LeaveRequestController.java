@@ -24,7 +24,7 @@ public class LeaveRequestController {
     @Autowired
 	private LeaveRequestService leaveRequestService;
 
-    @PostMapping("/requests")
+    @PostMapping("/add")
     public LeaveRequest createLeaveRequest(@RequestBody LeaveRequest leaveRequest) {
         return leaveRequestService.createLeaveRequest(leaveRequest);
     }

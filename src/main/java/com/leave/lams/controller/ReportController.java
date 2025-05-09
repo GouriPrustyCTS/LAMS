@@ -23,7 +23,7 @@ public class ReportController {
     @Autowired
     private ReportService reportService;
 
-    @PostMapping("/reports")
+    @PostMapping("/add")
     public Report createReport(@RequestBody Report report) {
         return reportService.createReport(report);
     }
@@ -39,12 +39,12 @@ public class ReportController {
                 .map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
     
-    @PutMapping("/update/{id}")
+    @PutMapping("/{id}")
     public Report update(@PathVariable Long id, @RequestBody Report report) {
     	return reportService.updateReport(id, report);
     }
     
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
     	reportService.deleteReport(id);
     }

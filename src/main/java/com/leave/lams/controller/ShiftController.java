@@ -23,7 +23,7 @@ public class ShiftController {
     @Autowired
     private ShiftService shiftService;
 
-    @PostMapping("/shifts")
+    @PostMapping("/add")
     public Shift createShift(@RequestBody Shift shift) {
         return shiftService.createShift(shift);
     }
@@ -39,12 +39,12 @@ public class ShiftController {
                 .map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
     
-    @PutMapping("/update/{id}")
+    @PutMapping("/{id}")
     public Shift update(@PathVariable Long id, @RequestBody Shift shift) {
     	return shiftService.updateShift(id, shift);
     }
     
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
     	shiftService.deleteShift(id);
     }

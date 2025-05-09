@@ -78,4 +78,62 @@ public class LamsApplication {
     }
   ]
 } 
+
+
+___________[POST] -> /attendance/add
+
+{
+    "clockInTime": "2025-05-07T09:00:00",
+    "clockOutTime": "2025-05-07T17:00:00",
+    "workHours": 8,
+    "attendanceDate": "2025-05-10",
+    "employee":{
+        "employeeId":2
+    }
+}
+
+__________[POS] -> /leaveBalances/add
+
+{
+    "leaveType": "Vacation",
+    "balance": 25,
+    "employee":{
+        "employeeId":2
+    }
+}
+__________[POST] -> /leaveRequests/add
+{
+      "leaveType": "Marriage",
+      "startDate": "2025-06-01",
+      "endDate": "2025-06-05",
+      "requestDate": "2025-05-07T09:00:00",
+      "reason": "Honey moon",
+      "status": "Approved",
+      "employee":{
+        "employeeId":2
+      }
+}
+__________[POST] -> /attendanceReports/add
+
+{
+      "dateRangeStart": "2025-05-01",
+      "dateRangeEnd": "2025-05-05",
+      "generatedDate": "2025-05-07T17:00:00",
+      "totalAttendance": 10,
+      "absenteesim": 2,
+      "employee":{
+        "employeeId":2
+      }
+}
+__________[POST] -> /shift/add
+{
+      "shiftDate": "2025-05-10",
+      "shiftStartTime": "09:00",
+      "shiftEndTime": "19:00",
+      "employee":{
+        "employeeId":2
+      }
+    }
+    
+    
  */

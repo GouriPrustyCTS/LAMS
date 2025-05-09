@@ -35,6 +35,7 @@ public class AttendanceDAO implements AttendanceService {
 			att.setClockInTime(attendance.getClockInTime());
 			att.setClockOutTime(attendance.getClockOutTime());
 			att.setAttendanceDate(attendance.getAttendanceDate());
+			att.setWorkHours(attendance.getWorkHours());
 			return attendanceRepository.save(att);
 		}
 		return null;
