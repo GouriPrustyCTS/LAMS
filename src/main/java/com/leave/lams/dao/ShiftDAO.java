@@ -32,6 +32,11 @@ public class ShiftDAO implements ShiftService{
 		Optional<Shift> existing = shiftRepository.findById(id);
 		if(existing.isPresent()) {
 			Shift s = existing.get();
+			
+			if(!s.getEmployee().getEmployeeId().equals(shift.getEmployee().getEmployeeId())) {
+				throw new IllegalArgumentException("Employee ID does not match the owner of this record.");
+			}
+			
 			s.setShiftDate(shift.getShiftDate());
 			s.setShiftStartTime(shift.getShiftStartTime());
 			s.setShiftEndTime(shift.getShiftEndTime());

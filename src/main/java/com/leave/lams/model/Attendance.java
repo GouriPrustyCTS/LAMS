@@ -2,7 +2,7 @@ package com.leave.lams.model;
 import java.time.LocalDateTime;
 import java.util.Date;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIncludeProperties;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -30,7 +30,9 @@ public class Attendance {
     
     @ManyToOne
     @JoinColumn(name = "employeeId", nullable = false)
-    @JsonBackReference
+//    @JsonBackReference
+//    @JsonIgnoreProperties({"hireDate","name","email","department","jobTitle","attendances","leaveRequests","leaveBalances","shifts","reports"})
+    @JsonIncludeProperties({"employeeId"})
     private Employee employee;
     
     private Double workHours;

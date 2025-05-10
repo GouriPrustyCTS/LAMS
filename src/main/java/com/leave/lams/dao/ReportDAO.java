@@ -33,6 +33,11 @@ public class ReportDAO implements ReportService {
 		Optional<Report> existing = reportRepository.findById(id);
 		if (existing.isPresent()) {
 			Report r = existing.get();
+			
+			if(!r.getEmployee().getEmployeeId().equals(report.getEmployee().getEmployeeId())) {
+				throw new IllegalArgumentException("Employee ID does not match the owner of this record.");
+			}
+			
 			r.setDateRangeStart(report.getDateRangeStart());
 			r.setDateRangeEnd(report.getDateRangeEnd());
 			r.setDateRangeEnd(report.getDateRangeEnd());

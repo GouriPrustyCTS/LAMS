@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.leave.lams.model.LeaveRequest;
+import com.leave.lams.model.Report;
 import com.leave.lams.repository.LeaveRequestRepository;
 import com.leave.lams.service.LeaveRequestService;
 
@@ -31,12 +32,21 @@ public class LeaveRequestDAO implements LeaveRequestService{
 	    }
 
 	    public LeaveRequest updateLeaveRequest(Long id, LeaveRequest updatedRequest) {
-	        if (leaveRequestRepository.existsById(id)) {
-	            updatedRequest.setLeaveRequestId(id);
-	            return leaveRequestRepository.save(updatedRequest);
-	        }
-	        return null;
+	        Optional<LeaveRequest> existing = leaveRequestRepository.findById(id);
+			if (existing.isPresent()) {
+				LeaveRequest r = existing.get();
+				
+				if(!r.getEmployee().getEmployeeId().equals(updatedRequest.getEmployee().getEmployeeId())) {
+					throw new IllegalArgumentException("Employee ID does not match the owner of this record.");
+				}
+				
+				updatedRequest.setLeaveRequestId(id);
+				return leaveRequestRepository.save(r);
+			}
+			return null;
 	    }
+	    
+	    
 
 	    public boolean deleteLeaveRequest(Long id) {
 	        if (leaveRequestRepository.existsById(id)) {

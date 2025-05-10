@@ -26,8 +26,8 @@ public class EmployeeDAO implements EmployeeService {
 		return employeeRepository.findAll();
 	}
 
-	public Employee getEmployeeById(Long id) {
-		return employeeRepository.findById(id).orElse(null);
+	public Optional<Employee> getEmployeeById(Long id) {
+		return employeeRepository.findById(id);
 	}
 
 	@Transactional
@@ -73,6 +73,11 @@ public class EmployeeDAO implements EmployeeService {
 		Optional<Employee> existingOptional = employeeRepository.findById(id);
 		if (existingOptional.isPresent()) {
 			Employee emp = existingOptional.get();
+			
+			if(!emp.getEmployeeId().equals(employee.getEmployeeId())) {
+				throw new IllegalArgumentException("Employee ID does not match the owner of this record.");
+			}
+			
 			emp.setName(employee.getName());
 			emp.setEmail(employee.getEmail());
 			return employeeRepository.save(emp);

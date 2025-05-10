@@ -20,8 +20,8 @@ public class AttendanceDAO implements AttendanceService {
 		return attendanceRepository.findAll();
 	}
 
-	public Attendance getAttendanceById(Long id) {
-		return attendanceRepository.findById(id).orElse(null);
+	public Optional<Attendance> getAttendanceById(Long id) {
+		return attendanceRepository.findById(id);
 	}
 
 	public Attendance addAttendance(Attendance attendance) {
@@ -32,6 +32,11 @@ public class AttendanceDAO implements AttendanceService {
 		Optional<Attendance> existingOptional = attendanceRepository.findById(id);
 		if (existingOptional.isPresent()) {
 			Attendance att = existingOptional.get();
+			
+			if(!att.getEmployee().getEmployeeId().equals(attendance.getEmployee().getEmployeeId())) {
+				throw new IllegalArgumentException("Employee ID does not match the owner of this record.");
+			}
+			
 			att.setClockInTime(attendance.getClockInTime());
 			att.setClockOutTime(attendance.getClockOutTime());
 			att.setAttendanceDate(attendance.getAttendanceDate());

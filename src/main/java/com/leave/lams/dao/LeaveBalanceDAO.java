@@ -33,6 +33,11 @@ public class LeaveBalanceDAO implements LeaveBalanceService {
 		Optional<LeaveBalance> existingOptional = leaveBalanceRepository.findById(id);
 		if (existingOptional.isPresent()) {
 			LeaveBalance lb = existingOptional.get();
+			
+			if(!lb.getEmployee().getEmployeeId().equals(leaveBalance.getEmployee().getEmployeeId())) {
+				throw new IllegalArgumentException("Employee ID does not match the owner of this record.");
+			}
+			
 			lb.setLeaveType(leaveBalance.getLeaveType());
 			lb.setBalance(leaveBalance.getBalance());
 			return leaveBalanceRepository.save(lb);

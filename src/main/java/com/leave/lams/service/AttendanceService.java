@@ -1,13 +1,14 @@
 package com.leave.lams.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import com.leave.lams.model.Attendance;
 
 public interface AttendanceService {
 	public List<Attendance> getAllAttendances();
 
-	public Attendance getAttendanceById(Long id);
+	public Optional<Attendance> getAttendanceById(Long id);
 
 	public Attendance addAttendance(Attendance attendance);
 

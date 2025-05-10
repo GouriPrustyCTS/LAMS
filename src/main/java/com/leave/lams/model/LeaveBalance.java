@@ -1,6 +1,6 @@
 package com.leave.lams.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIncludeProperties;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -25,7 +25,8 @@ public class LeaveBalance {
     
     @ManyToOne
     @JoinColumn(name = "employeeId", nullable = false)
-    @JsonBackReference
+//    @JsonBackReference
+    @JsonIncludeProperties({"employeeId"})
     private Employee employee;
     
     private String leaveType;
