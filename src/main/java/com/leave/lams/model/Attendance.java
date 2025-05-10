@@ -1,4 +1,5 @@
 package com.leave.lams.model;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 
@@ -26,7 +27,7 @@ public class Attendance {
     
     private LocalDateTime clockInTime;
     private LocalDateTime clockOutTime;
-    private Date attendanceDate;
+    private LocalDate attendanceDate;
     
     @ManyToOne
     @JoinColumn(name = "employeeId", nullable = false)

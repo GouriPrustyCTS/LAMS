@@ -1,5 +1,6 @@
 package com.leave.lams.controller;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,5 +49,45 @@ public class AttendanceController {
 	public void deleteAttendance(@PathVariable Long id) {
 		attendanceService.deleteAttendance(id);
 	}
+	
+	 // Clock in an employee
+    @PostMapping("/clock-in/{employeeId}")
+    public ResponseEntity<String> clockIn(@PathVariable long employeeId) {
+        attendanceService.clockIn(employeeId);
+        return ResponseEntity.ok("Employee clocked in successfully.");
+    }
+
+    // Clock out an employee
+    @PostMapping("/clock-out/{employeeId}")
+    public ResponseEntity<String> clockOut(@PathVariable long employeeId) {
+        try {
+            attendanceService.clockOut(employeeId);
+            return ResponseEntity.ok("Employee clocked out successfully.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+    
+    // Get attendance records for a specific employee
+    @GetMapping("/employee/{employeeId}")
+    public ResponseEntity<List<Attendance>> getAttendanceByEmployee(@PathVariable long employeeId) {
+        return ResponseEntity.ok(attendanceService.getAttendanceByEmployee(employeeId));
+    }
+    
+ // Get attendance by a specific date
+    @GetMapping("/date/{date}")
+    public ResponseEntity<List<Attendance>> getAttendanceByDate(@PathVariable LocalDate date) {
+        return ResponseEntity.ok(attendanceService.getAttendanceByDate(date));
+    }
+
+    // Calculate work hours for an attendance record
+    @GetMapping("/hours/{attendanceId}")
+    public ResponseEntity<Double> calculateWorkHours(@PathVariable long attendanceId) {
+        try {
+            return ResponseEntity.ok(attendanceService.calculateWorkHours(attendanceId));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
 
 }
