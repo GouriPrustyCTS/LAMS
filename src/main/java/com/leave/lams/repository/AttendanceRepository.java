@@ -14,7 +14,7 @@ import com.leave.lams.model.Attendance;
 @Repository
 public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
 
-	List<Attendance> findByEmployeeId(Long employeeId); // Changed method reference
+	List<Attendance> findByEmployee_EmployeeId(Long employeeId); 
     List<Attendance> findByAttendanceDate(LocalDate date);
 
     @Query("SELECT a FROM Attendance a WHERE a.employee.id = :employeeId ORDER BY a.clockInTime DESC")

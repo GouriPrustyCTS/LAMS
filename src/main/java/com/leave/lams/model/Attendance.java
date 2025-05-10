@@ -1,7 +1,6 @@
 package com.leave.lams.model;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonIncludeProperties;
 

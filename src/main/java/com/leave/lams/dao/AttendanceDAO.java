@@ -87,9 +87,9 @@ public class AttendanceDAO implements AttendanceService {
 		
 	}
 
-	@Override
+	@Override 
 	public List<Attendance> getAttendanceByEmployee(Long employeeId) {
-		return attendanceRepository.findByEmployeeId(employeeId);
+		return attendanceRepository.findByEmployee_EmployeeId(employeeId);
 	}
 
 	@Override

@@ -68,13 +68,13 @@ public class AttendanceController {
         }
     }
     
-    // Get attendance records for a specific employee
+//     Get attendance records for a specific employee  
     @GetMapping("/employee/{employeeId}")
     public ResponseEntity<List<Attendance>> getAttendanceByEmployee(@PathVariable long employeeId) {
         return ResponseEntity.ok(attendanceService.getAttendanceByEmployee(employeeId));
     }
     
- // Get attendance by a specific date
+ // Get attendance by a specific date -> 	../date/2025-05-10
     @GetMapping("/date/{date}")
     public ResponseEntity<List<Attendance>> getAttendanceByDate(@PathVariable LocalDate date) {
         return ResponseEntity.ok(attendanceService.getAttendanceByDate(date));
