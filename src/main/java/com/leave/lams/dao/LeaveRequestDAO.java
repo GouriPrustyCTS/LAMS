@@ -63,4 +63,15 @@ public class LeaveRequestDAO implements LeaveRequestService{
 	        }
 	        return false;
 	    }
+	    
+	    public List<LeaveRequest> getLeaveReportDataSortedByMonth() {
+	        List<LeaveRequest> allLeaves = leaveRequestRepository.findAllOrderByStartDateMonthAscAndStartDateAsc();
+	        return allLeaves;
+	    }
+
+
+	    public List<LeaveRequest> getLeaveDetailsByEmployee(Long empId) {
+	        List<LeaveRequest> employeeLeaves = leaveRequestRepository.findByEmployee_EmployeeId(empId);
+	        return employeeLeaves;
+	    }
 }

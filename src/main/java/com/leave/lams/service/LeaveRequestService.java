@@ -1,9 +1,12 @@
 package com.leave.lams.service;
 
-import com.leave.lams.model.LeaveRequest;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.stereotype.Service;
+
+import com.leave.lams.model.LeaveRequest;
+@Service
 public interface LeaveRequestService {
 
 	// In the implementation, log the start and end of this method.
@@ -23,5 +26,9 @@ public interface LeaveRequestService {
 
 	// In the implementation, log the start and end of this method.
 	public LeaveRequest updateLeaveStatus(Long id, String newStatus);
+	
+	public List<LeaveRequest> getLeaveReportDataSortedByMonth();
+
+    public List<LeaveRequest> getLeaveDetailsByEmployee(Long empId);
 
 }

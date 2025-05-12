@@ -36,7 +36,7 @@ public class Attendance {
    
     @ManyToOne
     @JoinColumn(name = "employeeId", nullable = false)
-    @JsonIncludeProperties({"employeeId"})
+    @JsonIncludeProperties({"employeeId","name"})
     private Employee employee;
    
     private Double workHours;

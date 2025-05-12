@@ -2,7 +2,9 @@ package com.leave.lams.repository;
 
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -26,4 +28,19 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
 
 	// Finds an attendance record by its ID.
 	Optional<Attendance> findByAttendanceId(Long attendanceId);
+	
+	
+	
+	
+	@Query("SELECT t FROM Attendance t WHERE t.employee.employeeId = :employeeId ORDER BY t.attendanceDate")
+    List<Attendance> findByEmployee_EmployeeIdOrderByDate(Long empId);
+
+    //  Fetch data for a specific date range
+	@Query("SELECT t FROM Attendance t WHERE t.employee.employeeId = :employeeId AND t.attendanceDate BETWEEN :startDate AND :endDate ORDER BY t.attendanceDate")
+    List<Attendance> findByEmployee_EmployeeIdAndDateBetweenOrderByDate(Long empId, LocalDateTime startDate, LocalDateTime endDate);
+
+	@Query("SELECT t.employee.employeeId AS empId, t.employee.name AS empName, t.clockInTime AS clockInTime, t.clockOutTime AS clockOutTime, t.attendanceDate AS date FROM Attendance t")
+    List<Map<String, Object>> getClockInOutData();
+    
+    
 }

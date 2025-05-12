@@ -1,7 +1,10 @@
 package com.leave.lams.model;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Date;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonIncludeProperties;
 
@@ -15,8 +18,6 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -31,8 +32,8 @@ public class LeaveRequest {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long leaveRequestId;
 
-	private Date startDate;
-	private Date endDate;
+	private LocalDate startDate;
+	private LocalDate endDate;
 	private LocalDateTime requestDate;
 	private String reason;
 	private String leaveType;
@@ -40,7 +41,7 @@ public class LeaveRequest {
 
 	@ManyToOne
 	@JoinColumn(name = "employeeId", nullable = false)
-	@JsonIncludeProperties({"employeeId"})
+	@JsonIncludeProperties({"employeeId","name"})
 	private Employee employee;
 
 	// Example of a log statement in a setter
@@ -52,4 +53,5 @@ public class LeaveRequest {
 	public Long getId() {
 		return leaveRequestId;
 	}
+
 }

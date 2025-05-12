@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Leave Report</title>
+     <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        h1 {
+            text-align: center;
+        }
+        #downloadButtons {
+            margin-top: 20px;
+            text-align: center;
+        }
+        #downloadButtons button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Leave Report</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Employee ID</th>
+                <th>Employee Name</th>
+                <th>Reason</th>
+                <th>End Date</th>
+                <th>Leave Type</th>
+                <th>Start Date</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="leave : ${leaveReportData}">
+                <td th:text="${leave.employee.employeeId}"></td>
+                <td th:text="${leave.employee.name}"></td>
+                <td th:text="${leave.reason}"></td>
+                <td th:text="${#dates.format(leave.endDate, 'yyyy-MM-dd')}"></td>
+                <td th:text="${leave.leaveType}"></td>
+                 <td th:text="${#dates.format(leave.startDate, 'yyyy-MM-dd')}"></td>
+                <td th:text="${leave.status}"></td>
+            </tr>
+        </tbody>
+    </table>
+    <div id="downloadButtons">
+        <button onclick="downloadExcel()">Download Excel</button>
+        <button onclick="downloadPdf()">Download PDF</button>
+    </div>
+
+    <script>
+        function downloadExcel() {
+            window.location.href = '/downloadLeaveReportXcel';
+        }
+
+        function downloadPdf() {
+            window.location.href = '/downloadLeaveReportPdf';
+        }
+    </script>
+</body>
+</html>
