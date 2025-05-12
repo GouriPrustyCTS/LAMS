@@ -8,6 +8,8 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -15,6 +17,9 @@ import lombok.*;
 @Entity
 @Table(name = "employee")
 public class Employee {
+
+	private static final Logger logger = LoggerFactory.getLogger(Employee.class);
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long employeeId;
@@ -26,25 +31,23 @@ public class Employee {
 	private String jobTitle;
 
 	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
-//    @JsonManagedReference
 	private List<Attendance> attendances;
 
 	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
-//    @JsonManagedReference
 	private List<LeaveRequest> leaveRequests;
 
 	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
-//    @JsonManagedReference
 	private List<LeaveBalance> leaveBalances;
 
 	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
-//    @JsonManagedReference
 	private List<Shift> shifts;
 
 	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
-//    @JsonManagedReference
 	private List<Report> reports;
+
+	// Example of a log statement in a setter (NOT RECOMMENDED)
+	public void setName(String name) {
+		logger.debug("Setting employee name to: {}", name);
+		this.name = name;
+	}
 }
-/*
- * "2025-06-01" "2025-05-07T09:00:00"
- */
