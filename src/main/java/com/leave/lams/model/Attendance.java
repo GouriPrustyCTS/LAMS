@@ -14,26 +14,36 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
 @Entity
 @Table(name = "attendance")
 public class Attendance {
+
+    private static final Logger logger = LoggerFactory.getLogger(Attendance.class);
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long attendanceId;
-    
+   
     private LocalDateTime clockInTime;
     private LocalDateTime clockOutTime;
     private LocalDate attendanceDate;
-    
+   
     @ManyToOne
     @JoinColumn(name = "employeeId", nullable = false)
-//    @JsonBackReference
-//    @JsonIgnoreProperties({"hireDate","name","email","department","jobTitle","attendances","leaveRequests","leaveBalances","shifts","reports"})
     @JsonIncludeProperties({"employeeId"})
     private Employee employee;
-    
+   
     private Double workHours;
+
+    // Example of a log statement (NOT RECOMMENDED)
+    public void setClockInTime(LocalDateTime clockInTime) {
+        logger.debug("Setting clockInTime to: {}", clockInTime);
+        this.clockInTime = clockInTime;
+    }
 }
