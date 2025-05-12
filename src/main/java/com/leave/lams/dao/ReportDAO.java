@@ -40,7 +40,6 @@ public class ReportDAO implements ReportService {
 			
 			r.setDateRangeStart(report.getDateRangeStart());
 			r.setDateRangeEnd(report.getDateRangeEnd());
-			r.setDateRangeEnd(report.getDateRangeEnd());
 			r.setGeneratedDate(report.getGeneratedDate());
 			r.setTotalAttendance(report.getTotalAttendance());
 			r.setAbsenteesim(report.getAbsenteesim());

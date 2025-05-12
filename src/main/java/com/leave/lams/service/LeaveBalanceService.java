@@ -15,5 +15,5 @@ public interface LeaveBalanceService {
     
     public LeaveBalance updateLeaveBalance(Long id, LeaveBalance leaveBalance);
     
-    public void deLeaveBalance(Long id);
+    public void deleteLeaveBalance(Long id);
 }

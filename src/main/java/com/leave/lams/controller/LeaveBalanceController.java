@@ -46,7 +46,7 @@ public class LeaveBalanceController {
     
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
-    	leaveBalanceService.deLeaveBalance(id);
+    	leaveBalanceService.deleteLeaveBalance(id);
     }
 }
 

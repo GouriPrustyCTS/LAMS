@@ -1,17 +1,15 @@
 package com.leave.lams.dao;
 
 
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.List;
+import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.leave.lams.model.LeaveRequest;
-import com.leave.lams.model.Report;
 import com.leave.lams.repository.LeaveRequestRepository;
 import com.leave.lams.service.LeaveRequestService;
-
-import java.util.List;
-import java.util.Optional;
 
 @Service
 public class LeaveRequestDAO implements LeaveRequestService{
@@ -41,7 +39,7 @@ public class LeaveRequestDAO implements LeaveRequestService{
 				}
 				
 				updatedRequest.setLeaveRequestId(id);
-				return leaveRequestRepository.save(r);
+				return leaveRequestRepository.save(updatedRequest);
 			}
 			return null;
 	    }

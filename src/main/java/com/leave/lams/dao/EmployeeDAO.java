@@ -69,7 +69,7 @@ public class EmployeeDAO implements EmployeeService {
 	}
 
 	@Override
-	public Employee updatEmployee(long id, Employee employee) {
+	public Employee updateEmployee(long id, Employee employee) {
 		Optional<Employee> existingOptional = employeeRepository.findById(id);
 		if (existingOptional.isPresent()) {
 			Employee emp = existingOptional.get();
