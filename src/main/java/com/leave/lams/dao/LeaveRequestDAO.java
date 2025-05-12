@@ -44,7 +44,17 @@ public class LeaveRequestDAO implements LeaveRequestService{
 			return null;
 	    }
 	    
-	    
+	    @Override
+	    public LeaveRequest updateLeaveStatus(Long id, String newStatus) {
+	        Optional<LeaveRequest> optional = leaveRequestRepository.findById(id);
+	        if (optional.isPresent()) {
+	            LeaveRequest request = optional.get();
+	            request.setStatus(newStatus);
+	            return leaveRequestRepository.save(request);
+	        }
+	        return null;
+	    }
+
 
 	    public boolean deleteLeaveRequest(Long id) {
 	        if (leaveRequestRepository.existsById(id)) {

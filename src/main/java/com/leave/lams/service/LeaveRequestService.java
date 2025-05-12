@@ -15,4 +15,7 @@ public interface LeaveRequestService {
     public LeaveRequest updateLeaveRequest(Long id, LeaveRequest updatedRequest) ;
 
     public boolean deleteLeaveRequest(Long id) ;
+    
+    public LeaveRequest updateLeaveStatus(Long id, String newStatus);
+
 }

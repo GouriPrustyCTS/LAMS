@@ -2,6 +2,7 @@ package com.leave.lams.dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
@@ -76,10 +77,10 @@ public class LeaveRequestDAOTest {
         updatedLeaveRequest.setLeaveRequestId(1L);
 
         when(leaveRequestRepository.findById(1L)).thenReturn(Optional.of(existingLeaveRequest));
-        when(leaveRequestRepository.save(existingLeaveRequest)).thenReturn(existingLeaveRequest);
+        when(leaveRequestRepository.save(updatedLeaveRequest)).thenReturn(updatedLeaveRequest);
 
         LeaveRequest result = leaveRequestDAO.updateLeaveRequest(1L, updatedLeaveRequest);
-        assertEquals(existingLeaveRequest, result);
+        assertEquals(updatedLeaveRequest, result);
     }
 
     @Test
@@ -102,6 +103,13 @@ public class LeaveRequestDAOTest {
     }
     
     @Test
+    public void testGetLeaveRequestById_NotFound() {
+        when(leaveRequestRepository.findById(999L)).thenReturn(Optional.empty());
+        Optional<LeaveRequest> result = leaveRequestDAO.getLeaveRequestById(999L);
+        assertFalse(result.isPresent());
+    }
+    
+    @Test
     public void testUpdateLeaveRequest_MismatchedEmployeeId() {
         LeaveRequest existing = new LeaveRequest();
         Employee emp1 = new Employee();
@@ -115,11 +123,25 @@ public class LeaveRequestDAOTest {
 
         when(leaveRequestRepository.findById(1L)).thenReturn(Optional.of(existing));
 
-        try {
-            leaveRequestDAO.updateLeaveRequest(1L, updated);
-        } catch (IllegalArgumentException e) {
-            assertEquals("Employee ID does not match the owner of this record.", e.getMessage());
-        }
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+            leaveRequestDAO.updateLeaveRequest(1L, updated)
+        );
+        assertEquals("Employee ID does not match the owner of this record.", exception.getMessage());
     }
+    
+    @Test
+    public void testUpdateLeaveStatus() {
+        LeaveRequest leaveRequest = new LeaveRequest();
+        leaveRequest.setStatus("PENDING");
+
+        when(leaveRequestRepository.findById(1L)).thenReturn(Optional.of(leaveRequest));
+        leaveRequest.setStatus("APPROVED");
+        when(leaveRequestRepository.save(leaveRequest)).thenReturn(leaveRequest);
+
+        LeaveRequest updated = leaveRequestDAO.createLeaveRequest(leaveRequest);
+        assertEquals("APPROVED", updated.getStatus());
+    }
+
+
 
 }
