@@ -108,18 +108,22 @@ public class ReportDAO implements ReportService {
 	        return chart;
 	    }
 
-	    public byte[] generateTimeDifferenceBarChart() throws IOException {
-	        logger.info("Generating clock-in/clock-out time difference bar chart...");
+	    public byte[] generateTimeDifferenceBarChart(Long empId) throws IOException {
+	        logger.info("Generating clock-in/clock-out time difference bar chart for employee ID: {}", empId);
 	        List<Map<String, Object>> timeEntries = null;
 	        if (attendanceRepository != null) {
 	            try {
-	                timeEntries = attendanceRepository.getClockInOutData(); // Use the injected repository
+	                if (empId != null) {
+	                    timeEntries = attendanceRepository.getClockInOutDataByEmpId(empId); // Assuming you have this method
+	                    logger.info("Retrieved clock-in/clock-out data for employee {}: {}", empId, timeEntries);
+	                } else {
+	                    timeEntries = attendanceRepository.getClockInOutData(); // Fetch all data if no empId is provided
+	                    logger.info("Retrieved all clock-in/clock-out data: {}", timeEntries);
+	                }
 	            } catch (Exception e) {
 	                logger.error("Error fetching clock-in/clock-out data: {}", e.getMessage());
 	                timeEntries = new ArrayList<>();
 	            }
-
-	            logger.info("Retrieved clock-in/clock-out data: {}", timeEntries);
 
 	            List<String> employeeAndDate = new ArrayList<>();
 	            List<Double> timeDifferencesInHours = new ArrayList<>();
@@ -127,23 +131,23 @@ public class ReportDAO implements ReportService {
 
 	            if (timeEntries != null && !timeEntries.isEmpty()) {
 	                for (Map<String, Object> entry : timeEntries) {
-	                    Long empId = (Long) entry.get("empId");
+	                    Long currentEmpId = (Long) entry.get("empId");
 	                    String empName = (String) entry.get("empName");
 	                    LocalDateTime clockInTime = (LocalDateTime) entry.get("clockInTime");
 	                    LocalDateTime clockOutTime = (LocalDateTime) entry.get("clockOutTime");
 	                    LocalDate date = (LocalDate) entry.get("date");
 
-	                    if (clockInTime != null && clockOutTime != null && date != null && empId != null && empName != null) {
+	                    if (clockInTime != null && clockOutTime != null && date != null && currentEmpId != null && empName != null) {
 	                        java.time.Duration duration = java.time.Duration.between(clockInTime, clockOutTime);
 	                        double diffInHours = (double) duration.toMinutes() / 60.0;
-	                        employeeAndDate.add(empName + " (" + empId + ")\n" + date.format(dateFormatter));
+	                        employeeAndDate.add(empName + " (" + currentEmpId + ")\n" + date.format(dateFormatter));
 	                        timeDifferencesInHours.add(diffInHours);
 	                    } else {
 	                        logger.warn("Incomplete clock-in/clock-out data found: {}", entry);
 	                    }
 	                }
 	            } else {
-	                logger.warn("No clock-in/clock-out data found");
+	                logger.warn("No clock-in/clock-out data found for employee ID: {}", empId);
 	            }
 
 	            CategoryChart chart = new CategoryChartBuilder()

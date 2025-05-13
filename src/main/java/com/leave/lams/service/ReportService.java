@@ -24,7 +24,7 @@ public interface ReportService {
 
 	public PieChart generatePieChart();
 
-	public byte[] generateTimeDifferenceBarChart() throws IOException;
+	public byte[] generateTimeDifferenceBarChart(Long empId) throws IOException;
 
 	public byte[] generateMonthWiseLeaveCountLineChart() throws IOException;
 

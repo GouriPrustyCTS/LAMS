@@ -50,8 +50,8 @@
         </thead>
         <tbody>
             <tr th:each="leave : ${leaveReportData}">
-                <td th:text="1"></td>
-                <td th:text="hii"></td>
+                <td th:text="${leave.employee.employeeId}"></td>
+                <td th:text="${leave.employee.name}"></td>
                 <td th:text="${leave.reason}"></td>
                 <td th:text="${leave.endDate != null ? leave.endDate.format(T(java.time.format.DateTimeFormatter).ofPattern('yyyy-MM-dd')) : ''}"></td>
                 <td th:text="${leave.leaveType}"></td>

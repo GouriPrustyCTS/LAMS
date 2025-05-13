@@ -3,6 +3,7 @@ package com.leave.lams.controller;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Base64;
 import java.util.List;
 
 import org.apache.poi.ss.usermodel.Row;
@@ -10,8 +11,8 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.knowm.xchart.BitmapEncoder;
-import org.knowm.xchart.PieChart;
 import org.knowm.xchart.BitmapEncoder.BitmapFormat;
+import org.knowm.xchart.PieChart;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.itextpdf.text.BaseColor;
@@ -34,6 +36,7 @@ import com.itextpdf.text.PageSize;
 import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
+import com.leave.lams.dao.ReportDAO;
 import com.leave.lams.model.LeaveRequest;
 import com.leave.lams.service.LeaveRequestService;
 import com.leave.lams.service.ReportService;
@@ -43,13 +46,14 @@ import com.leave.lams.service.ReportService;
 public class ReportPageController {
 	
 	private static final Logger logger = LoggerFactory.getLogger(ReportPageController.class);
-	
+	@Autowired
+	private ReportDAO reportDAO;
 	@Autowired
 	private LeaveRequestService leaveRequestService;
 	
 	@Autowired
 	private ReportService reportService;
-
+	
 	
 	@GetMapping("/index")
     public String index() {
@@ -65,12 +69,11 @@ public class ReportPageController {
         return BitmapEncoder.getBitmapBytes(chart, BitmapFormat.PNG);
     }
     
-    // Done
     @GetMapping(value = "/tru-time-bar-chart", produces = MediaType.IMAGE_PNG_VALUE)
-    public @ResponseBody byte[] getTruTimeBarChart() throws IOException {
-        return reportService.generateTimeDifferenceBarChart();
+    public @ResponseBody byte[] getTruTimeBarChart(@RequestParam(value = "empId", required = false) Long empId) throws IOException {
+        return reportService.generateTimeDifferenceBarChart(empId);
     }
-
+    
     // Done
     @GetMapping(value = "/month-wise-leave-chart", produces = MediaType.IMAGE_PNG_VALUE)
     public @ResponseBody byte[] getMonthWiseLeaveChart() throws IOException {
@@ -89,7 +92,16 @@ public class ReportPageController {
     }
 
     @GetMapping("/tru-time-chart-page")
-    public String getTruTimeChartPage() {
+    public String getTruTimeChartPage(@RequestParam(value = "empId", required = false) Long empId, Model model) throws IOException {
+        byte[] chartBytes;
+        if (empId != null) {
+            chartBytes = reportDAO.generateTimeDifferenceBarChart(empId);
+            model.addAttribute("chartData", Base64.getEncoder().encodeToString(chartBytes));
+            model.addAttribute("filteredByEmpId", empId); // Optional: To display that it's filtered
+        } else {
+            chartBytes = reportDAO.generateTimeDifferenceBarChart(null); // Pass null to get all data
+            model.addAttribute("chartData", Base64.getEncoder().encodeToString(chartBytes));
+        }
         return "tru-time-chart";
     }
 
@@ -105,7 +117,6 @@ public class ReportPageController {
     
 //    _____________________________________________________________________________________________
 
-	
 	
 //  Handles the request for the leave report download page
     @GetMapping("/leave-report-page")
