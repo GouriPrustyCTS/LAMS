@@ -53,9 +53,9 @@
                 <td th:text="1"></td>
                 <td th:text="hii"></td>
                 <td th:text="${leave.reason}"></td>
-                <td th:text="${#dates.format(leave.endDate, 'yyyy-MM-dd')}"></td>
+                <td th:text="${leave.endDate != null ? leave.endDate.format(T(java.time.format.DateTimeFormatter).ofPattern('yyyy-MM-dd')) : ''}"></td>
                 <td th:text="${leave.leaveType}"></td>
-                <td th:text="${#dates.format(leave.startDate, 'yyyy-MM-dd')}"></td>
+                <td th:text="${leave.startDate != null ? leave.startDate.format(T(java.time.format.DateTimeFormatter).ofPattern('yyyy-MM-dd')) : ''}"></td>
                 <td th:text="${leave.status}"></td>
             </tr>
         </tbody>
@@ -66,10 +66,10 @@
     </div>
     <script>
         function downloadExcel() {
-            window.location.href = '/downloadLeaveReportXcel';
+            window.location.href = '/reports/downloadLeaveReportXcel';
         }
         function downloadPdf() {
-            window.location.href = '/downloadLeaveReportPdf';
+            window.location.href = '/reports/downloadLeaveReportPdf';
         }
     </script>
 </body>
