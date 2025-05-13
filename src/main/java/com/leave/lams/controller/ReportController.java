@@ -1,15 +1,10 @@
 package com.leave.lams.controller;
 
-import java.io.IOException;
 import java.util.List;
 
-import org.knowm.xchart.BitmapEncoder;
-import org.knowm.xchart.BitmapEncoder.BitmapFormat;
-import org.knowm.xchart.PieChart;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,7 +13,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.leave.lams.model.Report;
@@ -80,48 +74,5 @@ public class ReportController {
 	
 	
     
-    // Done
-    @GetMapping(value = "/leave-chart-xchart", produces = MediaType.IMAGE_PNG_VALUE)
-    public @ResponseBody byte[] getLeavePieChartXChart() throws IOException {
-        PieChart chart = reportService.generatePieChart();
-        return BitmapEncoder.getBitmapBytes(chart, BitmapFormat.PNG);
-    }
-    
-    // Done
-    @GetMapping(value = "/tru-time-bar-chart", produces = MediaType.IMAGE_PNG_VALUE)
-    public @ResponseBody byte[] getTruTimeBarChart() throws IOException {
-        return reportService.generateTimeDifferenceBarChart();
-    }
-
-    // Done
-    @GetMapping(value = "/month-wise-leave-chart", produces = MediaType.IMAGE_PNG_VALUE)
-    public @ResponseBody byte[] getMonthWiseLeaveChart() throws IOException {
-        return reportService.generateMonthWiseLeaveCountLineChart();
-    }
-    
-    // Done
-    @GetMapping(value = "/year-wise-leave-chart", produces = MediaType.IMAGE_PNG_VALUE)
-    public @ResponseBody byte[] getYearWiseLeaveChart() throws IOException {
-        return reportService.generateYearWiseLeaveCountLineChart();
-    }
-    
-    @GetMapping("/leave-chart-page")
-    public String getLeaveChartPage() {
-        return "leave-chart";
-    }
-
-    @GetMapping("/tru-time-chart-page")
-    public String getTruTimeChartPage() {
-        return "tru-time-chart";
-    }
-
-    @GetMapping("/month-wise-leave-page")
-    public String getMonthWiseLeaveChartPage() {
-        return "month-wise-leave-chart";
-    }
-
-    @GetMapping("/year-wise-leave-page")
-    public String getYearWiseLeaveChartPage() {
-        return "year-wise-leave-chart";
-    }
+   
 }
