@@ -1,13 +1,16 @@
 package com.leave.lams.dao;
 
 
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.leave.lams.model.LeaveBalance;
 import com.leave.lams.model.LeaveRequest;
+import com.leave.lams.repository.LeaveBalanceRepository;
 import com.leave.lams.repository.LeaveRequestRepository;
 import com.leave.lams.service.LeaveRequestService;
 
@@ -16,8 +19,17 @@ public class LeaveRequestDAO implements LeaveRequestService{
 
 	    @Autowired
 	    private LeaveRequestRepository leaveRequestRepository;
+	    
+	    @Autowired
+	    private LeaveBalanceRepository leaveBalanceRepository;
 
 	    public LeaveRequest createLeaveRequest(LeaveRequest leaveRequest) {
+	    	Optional<LeaveBalance> balance = leaveBalanceRepository
+	    		    .findByEmployeeEmployeeIdAndLeaveType(leaveRequest.getEmployee().getEmployeeId(), leaveRequest.getLeaveType());
+	    		if (balance == null || balance.get().getBalance() <= 0) {
+	    		    throw new RuntimeException("Insufficient leave balance");
+	    		}
+
 	        return leaveRequestRepository.save(leaveRequest);
 	    }
 
@@ -49,6 +61,20 @@ public class LeaveRequestDAO implements LeaveRequestService{
 	        Optional<LeaveRequest> optional = leaveRequestRepository.findById(id);
 	        if (optional.isPresent()) {
 	            LeaveRequest request = optional.get();
+	            
+	            
+	            if (request.getStatus().equals("APPROVED")) {
+	                long days = ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate()) + 1;
+	                LeaveBalance balance = leaveBalanceRepository
+	                    .findByEmployeeEmployeeIdAndLeaveType(request.getEmployee().getEmployeeId(), request.getLeaveType())
+	                    .orElseThrow(() -> new RuntimeException("No balance record found"));
+
+	                balance.setBalance(balance.getBalance() - days);
+	                leaveBalanceRepository.save(balance);
+	            }
+
+	            
+	            
 	            request.setStatus(newStatus);
 	            return leaveRequestRepository.save(request);
 	        }
