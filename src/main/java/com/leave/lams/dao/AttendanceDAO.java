@@ -5,14 +5,19 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.leave.lams.dto.AttendanceDTO;
+import com.leave.lams.dto.ShiftDTO;
+import com.leave.lams.mapper.AttendanceMapper;
 import com.leave.lams.model.Attendance;
 import com.leave.lams.model.Employee;
+import com.leave.lams.model.Shift;
 import com.leave.lams.repository.AttendanceRepository;
 import com.leave.lams.repository.EmployeeRepository;
 import com.leave.lams.service.AttendanceService;
@@ -20,39 +25,42 @@ import com.leave.lams.service.AttendanceService;
 @Service
 public class AttendanceDAO implements AttendanceService {
 
-	private static final Logger logger = LoggerFactory.getLogger(AttendanceDAO.class);
 
 	@Autowired
 	private AttendanceRepository attendanceRepository;
 	
 	@Autowired
 	private EmployeeRepository employeeRepository;
+	
+	@Autowired
+	private AttendanceMapper mapper;
 
-	public List<Attendance> getAllAttendances() {
-		logger.info("Getting all attendances");
-		return attendanceRepository.findAll();
+	public List<AttendanceDTO> getAllAttendances() {
+		List<Attendance> attendances = attendanceRepository.findAll();
+		return attendances.stream().map(s -> mapper.toDTo(s)).collect(Collectors.toList());
 	}
 
-	public Optional<Attendance> getAttendanceById(Long id) {
-		logger.info("Getting attendance by id: {}", id);
-		return attendanceRepository.findById(id);
+	public Optional<AttendanceDTO> getAttendanceById(Long id) {
+		Optional<Attendance> attendance = attendanceRepository.findById(id);
+	    if (attendance.isPresent()) {
+	        return Optional.of(mapper.toDTo(attendance.get()));
+	    }
+	    return Optional.empty();
 	}
 
-	public Attendance addAttendance(Attendance attendance) {
-		logger.info("Adding attendance: {}", attendance);
-		Attendance savedAttendance = attendanceRepository.save(attendance);
-		logger.info("Attendance added with id: {}", savedAttendance.getAttendanceId());
-		return savedAttendance;
+	public AttendanceDTO addAttendance(AttendanceDTO attendance) {
+		Attendance att = mapper.toEntity(attendance);
+		Attendance savedAttendance = attendanceRepository.save(att);
+		AttendanceDTO dtoRes = mapper.toDTo(savedAttendance);
+		return dtoRes;
 	}
 
-	public Attendance updatAttendance(long id, Attendance attendance) {
-		logger.info("Updating attendance with id: {}, new attendance data: {}", id, attendance);
+	public AttendanceDTO updatAttendance(long id, AttendanceDTO attendance) {
 		Optional<Attendance> existingOptional = attendanceRepository.findById(id);
 		if (existingOptional.isPresent()) {
 			Attendance att = existingOptional.get();
 			
-			if(!att.getEmployee().getEmployeeId().equals(attendance.getEmployee().getEmployeeId())) {
-				logger.error("Employee ID does not match the owner of this record.");
+			if(!att.getEmployee().getEmployeeId().equals(attendance.getEmployeeId())) {
 				throw new IllegalArgumentException("Employee ID does not match the owner of this record.");
 			}
 			
@@ -61,22 +69,17 @@ public class AttendanceDAO implements AttendanceService {
 			att.setAttendanceDate(attendance.getAttendanceDate());
 			att.setWorkHours(attendance.getWorkHours());
 			Attendance updatedAttendance = attendanceRepository.save(att);
-			logger.info("Attendance updated with id: {}", updatedAttendance.getAttendanceId());
-			return updatedAttendance;
+			return mapper.toDTo(updatedAttendance);
 		}
-		logger.warn("Attendance with id: {} not found.", id);
 		return null;
 	}
 
 	public void deleteAttendance(Long id) {
-		logger.info("Deleting attendance with id: {}", id);
 		attendanceRepository.deleteById(id);
-		logger.info("Attendance with id: {} deleted.", id);
 	}
 
 	@Override
 	public void clockIn(Long employeeId) {
-		logger.info("Clocking in employee with id: {}", employeeId);
 		Optional<Employee> employee = employeeRepository.findById(employeeId);
 		if (employee.isPresent()) {
 			Attendance attendance = new Attendance();
@@ -84,9 +87,7 @@ public class AttendanceDAO implements AttendanceService {
 			attendance.setClockInTime(LocalDateTime.now());
 			attendance.setAttendanceDate(LocalDate.now());
 			Attendance savedAttendance = attendanceRepository.save(attendance); // Save here to get the generated ID
-			logger.info("Employee with id: {} clocked in with attendance id: {}", employeeId, savedAttendance.getAttendanceId());
 		} else {
-			logger.error("Employee not found with ID: {}", employeeId);
 			throw new RuntimeException("Employee not found with ID: " + employeeId);
 		}
 		
@@ -94,7 +95,6 @@ public class AttendanceDAO implements AttendanceService {
 
 	@Override
 	public void clockOut(Long employeeId) {
-		logger.info("Clocking out employee with id: {}", employeeId);
 		List<Attendance> attendances = attendanceRepository.findLatestByEmployeeId(employeeId);
 		if (!attendances.isEmpty()) {
 			Attendance attendance = attendances.get(0);
@@ -109,51 +109,44 @@ public class AttendanceDAO implements AttendanceService {
 			else
 			{
 				attendance.setWorkHours(0.0);
-				logger.warn("Clockin or Clockout time is null");
 			}
 			
 			attendanceRepository.save(attendance);
-			logger.info("Employee with id: {} clocked out.", employeeId);
 		} else {
-			logger.error("Clock-in record not found for employee id: {}", employeeId);
 			throw new RuntimeException("Clock-in record not found");
 		}
 		
 	}
 
 	@Override	
-	public List<Attendance> getAttendanceByEmployee(Long employeeId) {
-		logger.info("Getting attendance by employee id: {}", employeeId);
-		return attendanceRepository.findByEmployee_EmployeeId(employeeId);
+	public List<AttendanceDTO> getAttendanceByEmployee(Long employeeId) {
+		List<Attendance> attendances = attendanceRepository.findByEmployee_EmployeeId(employeeId);
+		return attendances.stream().map(s -> mapper.toDTo(s)).collect(Collectors.toList());
 	}
 
 	@Override
-	public List<Attendance> getAttendanceByDate(LocalDate date) {
-		logger.info("Getting attendance by date: {}", date);
-		return attendanceRepository.findByAttendanceDate(date);
+	public List<AttendanceDTO> getAttendanceByDate(LocalDate date) {
+		List<Attendance> attendances = attendanceRepository.findByAttendanceDate(date);
+		return attendances.stream().map(s -> mapper.toDTo(s)).collect(Collectors.toList());
 	}
 
 	@Override
 	public Double calculateWorkHours(Long attendanceId) {
-		logger.info("Calculating work hours for attendance id: {}", attendanceId);
-		Optional<Attendance> attendanceOptional = getAttendanceById(attendanceId);
+		Optional<AttendanceDTO> attendanceOptional = getAttendanceById(attendanceId);
 		if (attendanceOptional.isPresent()) {
-			Attendance attendance = attendanceOptional.get();
+			AttendanceDTO attendance = attendanceOptional.get();
 			LocalDateTime clockInTime = attendance.getClockInTime();
 			LocalDateTime clockOutTime = attendance.getClockOutTime();
 			if (clockInTime != null && clockOutTime != null) {
 				double workHours = (double) Duration.between(clockInTime, clockOutTime).toHours();
-				logger.info("Work hours for attendance id: {} are: {}", attendanceId, workHours);
 				return workHours;
 			}
 			else
 			{
-				logger.warn("Clockin or Clockout time is null");
 				return 0.0;
 			}
 			
 		}
-		logger.error("Clock-out time not recorded for attendance id: {}", attendanceId);
 		throw new RuntimeException("Clock-out time not recorded");
 	}
 	

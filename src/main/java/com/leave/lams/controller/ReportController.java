@@ -15,8 +15,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.leave.lams.dto.ReportDTO;
 import com.leave.lams.model.Report;
 import com.leave.lams.service.ReportService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/attendanceReports")
@@ -28,25 +31,25 @@ public class ReportController {
 	private ReportService reportService;
 
 	@PostMapping("/add")
-	public Report createReport(@RequestBody Report report) {
+	public ReportDTO createReport(@Valid @RequestBody ReportDTO report) {
 		logger.info("Request received: POST /attendanceReports/add - Request Body: {}", report);
-		Report createdReport = reportService.createReport(report);
+		ReportDTO createdReport = reportService.createReport(report);
 		logger.info("Response sent: POST /attendanceReports/add - Report created with ID: {}", createdReport.getReportId());
 		return createdReport;
 	}
 
 	@GetMapping("/")
-	public List<Report> getAllReports() {
+	public List<ReportDTO> getAllReports() {
 		logger.info("Request received: GET /attendanceReports/");
-		List<Report> reports = reportService.getAllReports();
+		List<ReportDTO> reports = reportService.getAllReports();
 		logger.info("Response sent: GET /attendanceReports/ - Retrieved {} reports", reports.size());
 		return reports;
 	}
 
 	@GetMapping("/{reportID}")
-	public ResponseEntity<Report> getReportById(@PathVariable Long reportID) {
+	public ResponseEntity<ReportDTO> getReportById(@PathVariable Long reportID) {
 		logger.info("Request received: GET /attendanceReports/{}", reportID);
-		ResponseEntity<Report> response = reportService.getReportById(reportID)
+		ResponseEntity<ReportDTO> response = reportService.getReportById(reportID)
 				.map(ResponseEntity::ok).orElseGet(() -> {
 					logger.warn("Response sent: GET /attendanceReports/{} - Report not found", reportID);
 					return ResponseEntity.notFound().build();
@@ -56,9 +59,9 @@ public class ReportController {
 	}
 
 	@PutMapping("/{id}")
-	public Report update(@PathVariable Long id, @RequestBody Report report) {
+	public ReportDTO update(@PathVariable Long id,@Valid @RequestBody ReportDTO report) {
 		logger.info("Request received: PUT /attendanceReports/{} - Request Body: {}", id, report);
-		Report updatedReport = reportService.updateReport(id, report);
+		ReportDTO updatedReport = reportService.updateReport(id, report);
 		logger.info("Response sent: PUT /attendanceReports/{} - Report updated", id);
 		return updatedReport;
 	}

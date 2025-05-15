@@ -5,30 +5,30 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
-import com.leave.lams.model.LeaveRequest;
+import com.leave.lams.dto.LeaveRequestDTO;
 @Service
 public interface LeaveRequestService {
 
 	// In the implementation, log the start and end of this method.
-	public LeaveRequest createLeaveRequest(LeaveRequest leaveRequest);
+	public LeaveRequestDTO createLeaveRequest(LeaveRequestDTO leaveRequest);
 
 	// In the implementation, log the start and end of this method.
-	public List<LeaveRequest> getAllLeaveRequests();
+	public List<LeaveRequestDTO> getAllLeaveRequests();
 
 	// In the implementation, log the start and end of this method.
-	public Optional<LeaveRequest> getLeaveRequestById(Long id);
+	public Optional<LeaveRequestDTO> getLeaveRequestById(Long id);
 
 	// In the implementation, log the start and end of this method.
-	public LeaveRequest updateLeaveRequest(Long id, LeaveRequest updatedRequest);
+	public LeaveRequestDTO updateLeaveRequest(Long id, LeaveRequestDTO updatedRequest);
 
 	// In the implementation, log the start and end of this method.
 	public boolean deleteLeaveRequest(Long id);
 
 	// In the implementation, log the start and end of this method.
-	public LeaveRequest updateLeaveStatus(Long id, String newStatus);
+	public LeaveRequestDTO updateLeaveStatus(Long id, String newStatus);
 	
-	public List<LeaveRequest> getLeaveReportDataSortedByMonth();
+	public List<LeaveRequestDTO> getLeaveReportDataSortedByMonth();
 
-    public List<LeaveRequest> getLeaveDetailsByEmployee(Long empId);
+    public List<LeaveRequestDTO> getLeaveDetailsByEmployee(Long empId);
 
 }

@@ -1,23 +1,23 @@
 package com.leave.lams.service;
-import org.springframework.stereotype.Service;
-
-import com.leave.lams.model.Shift;
-
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+
+import com.leave.lams.dto.ShiftDTO;
 
 
 @Service
 public interface ShiftService {
 
 
-    public Shift createShift(Shift shift) ;
+    public ShiftDTO createShift(ShiftDTO shift) ;
 
-    public List<Shift> getAllShifts() ;
+    public List<ShiftDTO> getAllShifts() ;
 
-    public Optional<Shift> getShiftById(Long shiftID) ;
+    public Optional<ShiftDTO> getShiftById(Long shiftID) ;
     
-    public Shift updateShift(Long id, Shift shift);
+    public ShiftDTO updateShift(Long id, ShiftDTO shift);
     
     public void deleteShift(Long id);
 }

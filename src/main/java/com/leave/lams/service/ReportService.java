@@ -1,5 +1,6 @@
 package com.leave.lams.service;
 
+import com.leave.lams.dto.ReportDTO;
 import com.leave.lams.model.Report;
 
 import java.io.IOException;
@@ -12,13 +13,13 @@ import org.springframework.stereotype.Service;
 @Service
 public interface ReportService {
 
-    public Report createReport(Report report) ;
+    public ReportDTO createReport(ReportDTO report) ;
 
-    public List<Report> getAllReports() ;
+    public List<ReportDTO> getAllReports() ;
 
-    public Optional<Report> getReportById(Long reportID) ;
+    public Optional<ReportDTO> getReportById(Long reportID) ;
     
-    public Report updateReport(Long id, Report report);
+    public ReportDTO updateReport(Long id, ReportDTO report);
      
     public void deleteReport(Long id);
 

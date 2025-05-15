@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import org.knowm.xchart.BitmapEncoder;
 import org.knowm.xchart.CategoryChart;
@@ -22,8 +23,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.leave.lams.dto.ReportDTO;
+import com.leave.lams.dto.ShiftDTO;
+import com.leave.lams.mapper.ReportMapper;
 import com.leave.lams.model.LeaveRequest;
 import com.leave.lams.model.Report;
+import com.leave.lams.model.Shift;
 import com.leave.lams.repository.AttendanceRepository;
 import com.leave.lams.repository.LeaveRequestRepository;
 import com.leave.lams.repository.ReportRepository;
@@ -36,26 +41,37 @@ public class ReportDAO implements ReportService {
 
 	@Autowired
 	private ReportRepository reportRepository;
+	
+	@Autowired 
+	private ReportMapper mapper;
 
-	public Report createReport(Report report) {
-		return reportRepository.save(report);
+	public ReportDTO createReport(ReportDTO reportDto) {
+		Report report = mapper.toEntity(reportDto);
+		Report savedReport = reportRepository.save(report);
+		ReportDTO dtoRes = mapper.toDTo(savedReport);
+		return dtoRes;
 	}
 
-	public List<Report> getAllReports() {
-		return reportRepository.findAll();
+	public List<ReportDTO> getAllReports() {
+		List<Report> reports = reportRepository.findAll();
+		return reports.stream().map(s -> mapper.toDTo(s)).collect(Collectors.toList());
 	}
 
-	public Optional<Report> getReportById(Long reportID) {
-		return reportRepository.findById(reportID);
+	public Optional<ReportDTO> getReportById(Long reportID) {
+		Optional<Report> shift = reportRepository.findById(reportID);
+	    if (shift.isPresent()) {
+	        return Optional.of(mapper.toDTo(shift.get()));
+	    }
+	    return Optional.empty();
 	}
 
 	@Override
-	public Report updateReport(Long id, Report report) {
+	public ReportDTO updateReport(Long id, ReportDTO report) {
 		Optional<Report> existing = reportRepository.findById(id);
 		if (existing.isPresent()) {
 			Report r = existing.get();
 			
-			if(!r.getEmployee().getEmployeeId().equals(report.getEmployee().getEmployeeId())) {
+			if(!r.getEmployee().getEmployeeId().equals(report.getEmployeeId())) {
 				throw new IllegalArgumentException("Employee ID does not match the owner of this record.");
 			}
 			
@@ -64,7 +80,8 @@ public class ReportDAO implements ReportService {
 			r.setGeneratedDate(report.getGeneratedDate());
 			r.setTotalAttendance(report.getTotalAttendance());
 			r.setAbsenteesim(report.getAbsenteesim());
-			return reportRepository.save(r);
+			
+			return mapper.toDTo(reportRepository.save(r));
 		}
 		return null;
 	}

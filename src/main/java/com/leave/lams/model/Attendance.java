@@ -24,8 +24,6 @@ import org.slf4j.LoggerFactory;
 @Table(name = "attendance")
 public class Attendance {
 
-    private static final Logger logger = LoggerFactory.getLogger(Attendance.class);
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long attendanceId;
@@ -41,9 +39,5 @@ public class Attendance {
    
     private Double workHours;
 
-    // Example of a log statement (NOT RECOMMENDED)
-    public void setClockInTime(LocalDateTime clockInTime) {
-        logger.debug("Setting clockInTime to: {}", clockInTime);
-        this.clockInTime = clockInTime;
-    }
+   
 }

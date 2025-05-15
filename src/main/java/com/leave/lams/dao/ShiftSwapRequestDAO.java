@@ -2,10 +2,14 @@ package com.leave.lams.dao;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.leave.lams.dto.ShiftSwapRequestDTO;
+import com.leave.lams.mapper.ShiftMapper;
+import com.leave.lams.mapper.ShiftSwapRequestMapper;
 import com.leave.lams.model.Employee;
 import com.leave.lams.model.Shift;
 import com.leave.lams.model.ShiftSwapRequest;
@@ -21,38 +25,65 @@ public class ShiftSwapRequestDAO implements ShiftSwapRequestService {
 
     @Autowired
     private ShiftRepository shiftRepository;
+    
+    @Autowired
+	private ShiftSwapRequestMapper mapper;
 
-    public ShiftSwapRequest createRequest(ShiftSwapRequest request) {
+    public ShiftSwapRequestDTO createRequest(ShiftSwapRequestDTO request) {
         request.setStatus("PENDING");
-        return shiftSwapRequestRepository.save(request);
+        ShiftSwapRequest shitRequest = mapper.toEntity(request);
+        ShiftSwapRequest savedShiftRequest = shiftSwapRequestRepository.save(shitRequest);
+        ShiftSwapRequestDTO dtoRes = mapper.toDTo(savedShiftRequest);
+        return dtoRes;
     }
 
-    public List<ShiftSwapRequest> getAllRequests() {
-        return shiftSwapRequestRepository.findAll();
+    public List<ShiftSwapRequestDTO> getAllRequests() {
+        List<ShiftSwapRequest> shiftSwapRequests = shiftSwapRequestRepository.findAll();
+		return shiftSwapRequests.stream().map(s -> mapper.toDTo(s)).collect(Collectors.toList());
     }
 
-    public Optional<ShiftSwapRequest> getRequestById(Long id) {
-        return shiftSwapRequestRepository.findById(id);
+    public Optional<ShiftSwapRequestDTO> getRequestById(Long id) {
+		Optional<ShiftSwapRequest> shitRequest = shiftSwapRequestRepository.findById(id);
+	    if (shitRequest.isPresent()) {
+	        return Optional.of(mapper.toDTo(shitRequest.get()));
+	    }
+	    return Optional.empty();
     }
 
-    public List<ShiftSwapRequest> getPendingRequests() {
-        return shiftSwapRequestRepository.findByStatus("PENDING");
+    public List<ShiftSwapRequestDTO> getPendingRequests() {
+    	List<ShiftSwapRequest> shitRequest = shiftSwapRequestRepository.findByStatus("PENDING");
+        return shitRequest.stream().map(s -> mapper.toDTo(s)).collect(Collectors.toList());
     }
 
-    public ShiftSwapRequest updateRequestStatus(Long id, String status) {
-        return shiftSwapRequestRepository.findById(id).map(req -> {
-            req.setStatus(status);
-            if ("APPROVED".equalsIgnoreCase(status)) {
-                // Perform the actual swap
-                Shift shift1 = req.getFromShift();
-                Shift shift2 = req.getToShift();
-                Employee temp = shift1.getEmployee();
-                shift1.setEmployee(shift2.getEmployee());
-                shift2.setEmployee(temp);
-                shiftRepository.save(shift1);
-                shiftRepository.save(shift2);
-            }
-            return shiftSwapRequestRepository.save(req);
-        }).orElseThrow(() -> new IllegalArgumentException("Swap request not found with ID: " + id));
+    public ShiftSwapRequestDTO updateRequestStatus(Long id, String status) {
+        Optional<ShiftSwapRequest> optionalRequest = shiftSwapRequestRepository.findById(id);
+
+        if (optionalRequest.isEmpty()) {
+            throw new IllegalArgumentException("Swap request not found with ID: " + id);
+        }
+
+        ShiftSwapRequest request = optionalRequest.get();
+        request.setStatus(status);
+
+        if ("APPROVED".equalsIgnoreCase(status)) {
+            Shift shift1 = request.getFromShift();
+            Shift shift2 = request.getToShift();
+
+            // Perform swap
+            Employee temp = shift1.getEmployee();
+            shift1.setEmployee(shift2.getEmployee());
+            shift2.setEmployee(temp);
+
+            // Save changes
+            shiftRepository.save(shift1);
+            shiftRepository.save(shift2);
+        }
+        
+        ShiftSwapRequest savedShiftRequest = shiftSwapRequestRepository.save(request);
+        ShiftSwapRequestDTO dtoRes = mapper.toDTo(savedShiftRequest);
+
+        return dtoRes;
     }
+
 }
+

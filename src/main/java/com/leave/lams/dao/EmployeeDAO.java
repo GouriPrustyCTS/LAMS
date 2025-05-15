@@ -2,12 +2,16 @@ package com.leave.lams.dao;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.leave.lams.dto.EmployeeDTO;
+import com.leave.lams.dto.ShiftDTO;
+import com.leave.lams.mapper.EmployeeMapper;
 import com.leave.lams.model.Attendance;
 import com.leave.lams.model.Employee;
 import com.leave.lams.model.LeaveBalance;
@@ -22,102 +26,55 @@ import jakarta.transaction.Transactional;
 @Service
 public class EmployeeDAO implements EmployeeService {
 
-	private static final Logger logger = LoggerFactory.getLogger(EmployeeDAO.class);
 
 	@Autowired
 	private EmployeeRepository employeeRepository;
+	
+	@Autowired
+	private EmployeeMapper mapper;
 
-	public List<Employee> getAllEmployees() {
-		logger.info("Getting all employees");
+	public List<EmployeeDTO> getAllEmployees() {
 		List<Employee> employees = employeeRepository.findAll();
-		logger.info("Retrieved {} employees", employees.size());
-		return employees;
+		return employees.stream().map(s -> mapper.toDTo(s)).collect(Collectors.toList());
 	}
 
-	public Optional<Employee> getEmployeeById(Long id) {
-		logger.info("Getting employee by id: {}", id);
+	public Optional<EmployeeDTO> getEmployeeById(Long id) {
 		Optional<Employee> employee = employeeRepository.findById(id);
 		if (employee.isPresent()) {
-			logger.info("Employee found with id: {}", id);
+			 return Optional.of(mapper.toDTo(employee.get()));
 		} else {
-			logger.warn("Employee not found with id: {}", id);
+			return Optional.empty();
 		}
-		return employee;
 	}
 
 	@Transactional
-	public Employee addEmployee(Employee employee) {
-		logger.info("Adding employee: {}", employee);
-
-		if (employee.getAttendances() != null) {
-			for (Attendance attendance : employee.getAttendances()) {
-				attendance.setEmployee(employee);
-				logger.debug("Setting employee for attendance: {}", attendance);
-			}
-		}
-
-		// Set employee reference in leaveRequests
-		if (employee.getLeaveRequests() != null) {
-			for (LeaveRequest leaveRequest : employee.getLeaveRequests()) {
-				leaveRequest.setEmployee(employee);
-				logger.debug("Setting employee for leaveRequest: {}", leaveRequest);
-			}
-		}
-
-		// Set employee reference in leaveBalances
-		if (employee.getLeaveBalances() != null) {
-			for (LeaveBalance leaveBalance : employee.getLeaveBalances()) {
-				leaveBalance.setEmployee(employee);
-				logger.debug("Setting employee for leaveBalance: {}", leaveBalance);
-			}
-		}
-
-		// Set employee reference in shifts
-		if (employee.getShifts() != null) {
-			for (Shift shift : employee.getShifts()) {
-				shift.setEmployee(employee);
-				logger.debug("Setting employee for shift: {}", shift);
-			}
-		}
-
-		// Set employee reference in reports
-		if (employee.getReports() != null) {
-			for (Report report : employee.getReports()) {
-				report.setEmployee(employee);
-				logger.debug("Setting employee for report: {}", report);
-			}
-		}
-		Employee savedEmployee = employeeRepository.save(employee);
-		logger.info("Employee added with id: {}", savedEmployee.getEmployeeId());
-		return savedEmployee;
+	public EmployeeDTO addEmployee(EmployeeDTO employee) {
+		Employee emp = mapper.toEntity(employee);
+		Employee savedEmployee = employeeRepository.save(emp);
+		EmployeeDTO dtoRes = mapper.toDTo(savedEmployee);
+		return dtoRes;
 	}
 
 	@Override
-	public Employee updateEmployee(long id, Employee employee) {
-		logger.info("Updating employee with id: {}, data: {}", id, employee);
+	public EmployeeDTO updateEmployee(long id, EmployeeDTO employee) {
 		Optional<Employee> existingOptional = employeeRepository.findById(id);
 		if (existingOptional.isPresent()) {
 			Employee emp = existingOptional.get();
 			
 			if(!emp.getEmployeeId().equals(employee.getEmployeeId())) {
-				logger.error("Employee ID does not match the owner of this record.");
 				throw new IllegalArgumentException("Employee ID does not match the owner of this record.");
 			}
 			
 			emp.setName(employee.getName());
 			emp.setEmail(employee.getEmail());
 			Employee updatedEmployee = employeeRepository.save(emp);
-			logger.info("Employee updated with id: {}", updatedEmployee.getEmployeeId());
-			return updatedEmployee;
+			return mapper.toDTo(updatedEmployee);
 		}
-		logger.warn("Employee with id: {} not found.", id);
 		return null;
 	}
 
 	public void deleteEmployee(Long id) {
-		logger.info("Deleting employee with id: {}", id);
 		employeeRepository.deleteById(id);
-		logger.info("Employee deleted with id: {}", id);
 	}
 
 }

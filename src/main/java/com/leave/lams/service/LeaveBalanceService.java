@@ -1,19 +1,19 @@
 package com.leave.lams.service;
 
 
-import com.leave.lams.model.LeaveBalance;
-
 import java.util.List;
 import java.util.Optional;
 
+import com.leave.lams.dto.LeaveBalanceDTO;
+
 public interface LeaveBalanceService {
-    public LeaveBalance createLeaveBalance(LeaveBalance leaveBalance) ;
+    public LeaveBalanceDTO createLeaveBalance(LeaveBalanceDTO leaveBalance) ;
 
-    public List<LeaveBalance> getAllLeaveBalances() ;
+    public List<LeaveBalanceDTO> getAllLeaveBalances() ;
 
-    public Optional<LeaveBalance> getLeaveBalanceById(Long employeeID) ;
+    public Optional<LeaveBalanceDTO> getLeaveBalanceById(Long employeeID) ;
     
-    public LeaveBalance updateLeaveBalance(Long id, LeaveBalance leaveBalance);
+    public LeaveBalanceDTO updateLeaveBalance(Long id, LeaveBalanceDTO leaveBalance);
     
     public void deleteLeaveBalance(Long id);
 }

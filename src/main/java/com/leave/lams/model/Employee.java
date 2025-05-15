@@ -45,9 +45,5 @@ public class Employee {
 	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Report> reports;
 
-	// Example of a log statement in a setter (NOT RECOMMENDED)
-	public void setName(String name) {
-		logger.debug("Setting employee name to: {}", name);
-		this.name = name;
-	}
+
 }

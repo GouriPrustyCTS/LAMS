@@ -4,10 +4,13 @@ package com.leave.lams.dao;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.leave.lams.dto.LeaveRequestDTO;
+import com.leave.lams.mapper.LeaveRequestMapper;
 import com.leave.lams.model.LeaveBalance;
 import com.leave.lams.model.LeaveRequest;
 import com.leave.lams.repository.LeaveBalanceRepository;
@@ -22,42 +25,50 @@ public class LeaveRequestDAO implements LeaveRequestService{
 	    
 	    @Autowired
 	    private LeaveBalanceRepository leaveBalanceRepository;
+	    
+	    @Autowired
+	    private LeaveRequestMapper mapper;
 
-	    public LeaveRequest createLeaveRequest(LeaveRequest leaveRequest) {
+	    public LeaveRequestDTO createLeaveRequest(LeaveRequestDTO leaveRequest) {
 	    	Optional<LeaveBalance> balance = leaveBalanceRepository
-	    		    .findByEmployeeEmployeeIdAndLeaveType(leaveRequest.getEmployee().getEmployeeId(), leaveRequest.getLeaveType());
+	    		    .findByEmployeeEmployeeIdAndLeaveType(leaveRequest.getEmployeeId(), leaveRequest.getLeaveType());
 	    		if (balance == null || balance.get().getBalance() <= 0) {
 	    		    throw new RuntimeException("Insufficient leave balance");
 	    		}
 
-	        return leaveRequestRepository.save(leaveRequest);
+	        return mapper.toDTo(leaveRequestRepository.save(mapper.toEntity(leaveRequest)));
 	    }
 
-	    public List<LeaveRequest> getAllLeaveRequests() {
-	        return leaveRequestRepository.findAll();
+	    public List<LeaveRequestDTO> getAllLeaveRequests() {
+			List<LeaveRequest> leaveRequests = leaveRequestRepository.findAll();
+			return leaveRequests.stream().map(s -> mapper.toDTo(s)).collect(Collectors.toList());
 	    }
 
-	    public Optional<LeaveRequest> getLeaveRequestById(Long id) {
-	        return leaveRequestRepository.findById(id);
+	    public Optional<LeaveRequestDTO> getLeaveRequestById(Long id) {
+			Optional<LeaveRequest> shift = leaveRequestRepository.findById(id);
+		    if (shift.isPresent()) {
+		        return Optional.of(mapper.toDTo(shift.get()));
+		    }
+		    return Optional.empty();
 	    }
 
-	    public LeaveRequest updateLeaveRequest(Long id, LeaveRequest updatedRequest) {
+	    public LeaveRequestDTO updateLeaveRequest(Long id, LeaveRequestDTO updatedRequest) {
 	        Optional<LeaveRequest> existing = leaveRequestRepository.findById(id);
 			if (existing.isPresent()) {
 				LeaveRequest r = existing.get();
 				
-				if(!r.getEmployee().getEmployeeId().equals(updatedRequest.getEmployee().getEmployeeId())) {
+				if(!r.getEmployee().getEmployeeId().equals(updatedRequest.getEmployeeId())) {
 					throw new IllegalArgumentException("Employee ID does not match the owner of this record.");
 				}
 				
 				updatedRequest.setLeaveRequestId(id);
-				return leaveRequestRepository.save(updatedRequest);
+				return mapper.toDTo(leaveRequestRepository.save(mapper.toEntity(updatedRequest)));
 			}
 			return null;
 	    }
 	    
 	    @Override
-	    public LeaveRequest updateLeaveStatus(Long id, String newStatus) {
+	    public LeaveRequestDTO updateLeaveStatus(Long id, String newStatus) {
 	        Optional<LeaveRequest> optional = leaveRequestRepository.findById(id);
 	        if (optional.isPresent()) {
 	            LeaveRequest request = optional.get();
@@ -76,7 +87,7 @@ public class LeaveRequestDAO implements LeaveRequestService{
 	            
 	            
 	            request.setStatus(newStatus);
-	            return leaveRequestRepository.save(request);
+	            return  mapper.toDTo(leaveRequestRepository.save(request));
 	        }
 	        return null;
 	    }
@@ -90,14 +101,14 @@ public class LeaveRequestDAO implements LeaveRequestService{
 	        return false;
 	    }
 	    
-	    public List<LeaveRequest> getLeaveReportDataSortedByMonth() {
+	    public List<LeaveRequestDTO> getLeaveReportDataSortedByMonth() {
 	        List<LeaveRequest> allLeaves = leaveRequestRepository.findAllOrderByStartDateMonthAscAndStartDateAsc();
-	        return allLeaves;
+	        return allLeaves.stream().map(s -> mapper.toDTo(s)).collect(Collectors.toList());
 	    }
 
 
-	    public List<LeaveRequest> getLeaveDetailsByEmployee(Long empId) {
+	    public List<LeaveRequestDTO> getLeaveDetailsByEmployee(Long empId) {
 	        List<LeaveRequest> employeeLeaves = leaveRequestRepository.findByEmployee_EmployeeId(empId);
-	        return employeeLeaves;
+	        return employeeLeaves.stream().map(s -> mapper.toDTo(s)).collect(Collectors.toList());
 	    }
 }

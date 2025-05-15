@@ -1,18 +1,19 @@
 package com.leave.lams.service;
-import com.leave.lams.model.Employee;
 import java.util.List;
 import java.util.Optional;
+
+import com.leave.lams.dto.EmployeeDTO;
 
 public interface EmployeeService {
 
 
-    public List<Employee> getAllEmployees();
+    public List<EmployeeDTO> getAllEmployees();
 
-    public Optional<Employee> getEmployeeById(Long id) ;
+    public Optional<EmployeeDTO> getEmployeeById(Long id) ;
 
-    public Employee addEmployee(Employee employee) ;
+    public EmployeeDTO addEmployee(EmployeeDTO employee) ;
     
-    public Employee updateEmployee(long id,Employee employee);
+    public EmployeeDTO updateEmployee(long id,EmployeeDTO employee);
 
     public void deleteEmployee(Long id) ;
 }

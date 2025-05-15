@@ -18,7 +18,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.leave.lams.dao.AttendanceDAO;
-import com.leave.lams.model.Attendance;
+import com.leave.lams.dto.AttendanceDTO;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/attendance")
@@ -30,17 +32,17 @@ public class AttendanceController {
 	private AttendanceDAO attendanceService;
 
 	@GetMapping("/")
-	public List<Attendance> getAllAttendances() {
+	public List<AttendanceDTO> getAllAttendances() {
 		logger.info("Request received: GET /attendance/");
-		List<Attendance> result = attendanceService.getAllAttendances();
+		List<AttendanceDTO> result = attendanceService.getAllAttendances();
 		logger.info("Response sent: GET /attendance/ - Retrieved {} attendances.", result.size());
 		return result;
 	}
 
 	@GetMapping("/{id}")
-	public ResponseEntity<Attendance> getAttendanceById(@PathVariable Long id) {
+	public ResponseEntity<AttendanceDTO> getAttendanceById(@PathVariable Long id) {
 		logger.info("Request received: GET /attendance/{}", id);
-		Optional<Attendance> attendance = attendanceService.getAttendanceById(id);
+		Optional<AttendanceDTO> attendance = attendanceService.getAttendanceById(id);
 		if (attendance.isPresent()) {
 			logger.info("Response sent: GET /attendance/{} - Attendance found.", id);
 			return ResponseEntity.ok(attendance.get());
@@ -51,9 +53,9 @@ public class AttendanceController {
 	}
 
 	@PostMapping("/add")
-	public Attendance addAttendance(@RequestBody Attendance attendance) {
+	public AttendanceDTO addAttendance(@Valid @RequestBody AttendanceDTO attendance) {
 		logger.info("Request received: POST /attendance/add - Request Body: {}", attendance);
-		Attendance result = attendanceService.addAttendance(attendance);
+		AttendanceDTO result = attendanceService.addAttendance(attendance);
 		if (result != null) {
 			logger.info("Response sent: POST /attendance/add - Attendance added with ID: {}", result.getAttendanceId());
 		} else {
@@ -63,9 +65,9 @@ public class AttendanceController {
 	}
 
 	@PutMapping("/{id}")
-	public Attendance updatAttendance(@PathVariable Long id, @RequestBody Attendance attendance) {
+	public AttendanceDTO updatAttendance(@PathVariable Long id,@Valid @RequestBody AttendanceDTO attendance) {
 		logger.info("Request received: PUT /attendance/{} - Request Body: {}", id, attendance);
-		Attendance result = attendanceService.updatAttendance(id, attendance);
+		AttendanceDTO result = attendanceService.updatAttendance(id, attendance);
 		logger.info("Response sent: PUT /attendance/{} - Attendance updated.", id);
 		return result;
 	}
@@ -107,18 +109,18 @@ public class AttendanceController {
 
 	// Get attendance records for a specific employee
 	@GetMapping("/employee/{employeeId}")
-	public ResponseEntity<List<Attendance>> getAttendanceByEmployee(@PathVariable long employeeId) {
+	public ResponseEntity<List<AttendanceDTO>> getAttendanceByEmployee(@PathVariable long employeeId) {
 		logger.info("Request received: GET /attendance/employee/{}", employeeId);
-		List<Attendance> result = attendanceService.getAttendanceByEmployee(employeeId);
+		List<AttendanceDTO> result = attendanceService.getAttendanceByEmployee(employeeId);
 		logger.info("Response sent: GET /attendance/employee/{} - Retrieved {} attendances.", employeeId, result.size());
 		return ResponseEntity.ok(result);
 	}
 
 	// Get attendance by a specific date -> 	../date/2025-05-10
 	@GetMapping("/date/{date}")
-	public ResponseEntity<List<Attendance>> getAttendanceByDate(@PathVariable LocalDate date) {
+	public ResponseEntity<List<AttendanceDTO>> getAttendanceByDate(@PathVariable LocalDate date) {
 		logger.info("Request received: GET /attendance/date/{}", date);
-		List<Attendance> result = attendanceService.getAttendanceByDate(date);
+		List<AttendanceDTO> result = attendanceService.getAttendanceByDate(date);
 		logger.info("Response sent: GET /attendance/date/{} - Retrieved {} attendances.", date, result.size());
 		return ResponseEntity.ok(result);
 	}

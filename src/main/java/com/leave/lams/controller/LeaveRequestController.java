@@ -3,6 +3,7 @@ package com.leave.lams.controller;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,9 +19,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.leave.lams.dto.LeaveRequestDTO;
+import com.leave.lams.mapper.LeaveRequestMapper;
 import com.leave.lams.model.LeaveRequest;
 import com.leave.lams.repository.LeaveRequestRepository;
 import com.leave.lams.service.LeaveRequestService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/leaveRequests")
@@ -33,13 +38,16 @@ public class LeaveRequestController {
 
 	@Autowired
 	private LeaveRequestRepository leaveRequestRepository;
+	
+	@Autowired
+	private LeaveRequestMapper mapper;
 
 	@PostMapping("/add")
-	public LeaveRequest createLeaveRequest(@RequestBody LeaveRequest leaveRequest) {
+	public LeaveRequestDTO createLeaveRequest(@Valid @RequestBody LeaveRequestDTO leaveRequest) {
 		logger.info("Request received: POST /leaveRequests/add - Request Body: {}", leaveRequest);
-		LeaveRequest createdRequest = leaveRequestService.createLeaveRequest(leaveRequest);
+		LeaveRequestDTO createdRequest = leaveRequestService.createLeaveRequest(leaveRequest);
 		if (createdRequest != null) {
-			logger.info("Response sent: POST /leaveRequests/add - LeaveRequest created with ID: {}", createdRequest.getId());
+			logger.info("Response sent: POST /leaveRequests/add - LeaveRequest created with ID: {}", createdRequest.getLeaveRequestId());
 		} else {
 			logger.warn("Response sent: POST /leaveRequests/add - LeaveRequest add failed.");
 		}
@@ -47,17 +55,17 @@ public class LeaveRequestController {
 	}
 
 	@GetMapping("/")
-	public List<LeaveRequest> getAllLeaveRequests() {
+	public List<LeaveRequestDTO> getAllLeaveRequests() {
 		logger.info("Request received: GET /leaveRequests/");
-		List<LeaveRequest> leaveRequests = leaveRequestService.getAllLeaveRequests();
+		List<LeaveRequestDTO> leaveRequests = leaveRequestService.getAllLeaveRequests();
 		logger.info("Response sent: GET /leaveRequests/ - Retrieved {} leave requests", leaveRequests.size());
 		return leaveRequests;
 	}
 
 	@GetMapping("/{id}")
-	public ResponseEntity<LeaveRequest> getLeaveRequestById(@PathVariable Long id) {
+	public ResponseEntity<LeaveRequestDTO> getLeaveRequestById(@PathVariable Long id) {
 		logger.info("Request received: GET /leaveRequests/{}", id);
-		Optional<LeaveRequest> leaveRequest = leaveRequestService.getLeaveRequestById(id);
+		Optional<LeaveRequestDTO> leaveRequest = leaveRequestService.getLeaveRequestById(id);
 		if (leaveRequest.isPresent()) {
 			logger.info("Response sent: GET /leaveRequests/{} - LeaveRequest found", id);
 			return ResponseEntity.ok(leaveRequest.get());
@@ -68,9 +76,9 @@ public class LeaveRequestController {
 	}
 
 	@PutMapping("/{id}")
-	public ResponseEntity<LeaveRequest> updateLeaveRequest(@PathVariable Long id, @RequestBody LeaveRequest updatedRequest) {
+	public ResponseEntity<LeaveRequestDTO> updateLeaveRequest(@PathVariable Long id,@Valid @RequestBody LeaveRequestDTO updatedRequest) {
 		logger.info("Request received: PUT /leaveRequests/{} - Request Body: {}", id, updatedRequest);
-		LeaveRequest leaveRequest = leaveRequestService.updateLeaveRequest(id, updatedRequest);
+		LeaveRequestDTO leaveRequest = leaveRequestService.updateLeaveRequest(id, updatedRequest);
 		if (leaveRequest == null) {
 			logger.warn("Response sent: PUT /leaveRequests/{} - LeaveRequest not found", id);
 			return ResponseEntity.notFound().build();
@@ -92,10 +100,10 @@ public class LeaveRequestController {
 	}
 
 	@PatchMapping("/{id}/status")
-	public ResponseEntity<LeaveRequest> updateLeaveStatus(@PathVariable Long id, @RequestBody Map<String, String> body) {
+	public ResponseEntity<LeaveRequestDTO> updateLeaveStatus(@PathVariable Long id,@Valid @RequestBody Map<String, String> body) {
 		logger.info("Request received: PATCH /leaveRequests/{}/status - Request Body: {}", id, body);
 		String newStatus = body.get("status");
-		LeaveRequest updated = leaveRequestService.updateLeaveStatus(id, newStatus);
+		LeaveRequestDTO updated = leaveRequestService.updateLeaveStatus(id, newStatus);
 		if (updated == null) {
 			logger.warn("Response sent: PATCH /leaveRequests/{}/status - LeaveRequest not found", id);
 			return ResponseEntity.notFound().build();
@@ -105,11 +113,11 @@ public class LeaveRequestController {
 	}
 
 	@GetMapping("/employee/{employeeId}")
-	public List<LeaveRequest> getRequestsByEmployee(@PathVariable Long employeeId) {
+	public List<LeaveRequestDTO> getRequestsByEmployee(@PathVariable Long employeeId) {
 		logger.info("Request received: GET /leaveRequests/employee/{}", employeeId);
 		List<LeaveRequest> leaveRequests = leaveRequestRepository.findByEmployeeEmployeeId(employeeId);
 		logger.info("Response sent: GET /leaveRequests/employee/{} - Retrieved {} leave requests", employeeId, leaveRequests.size());
-		return leaveRequests;
+		return leaveRequests.stream().map(s -> mapper.toDTo(s)).collect(Collectors.toList());
 	}
 	
 //	_____________________________________________________________________________________________________________________________________

@@ -15,8 +15,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.leave.lams.model.Shift;
+import com.leave.lams.dto.ShiftDTO;
 import com.leave.lams.service.ShiftService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/shift")
@@ -28,25 +30,25 @@ public class ShiftController {
 	private ShiftService shiftService;
 
 	@PostMapping("/add")
-	public Shift createShift(@RequestBody Shift shift) {
+	public ShiftDTO createShift(@Valid @RequestBody ShiftDTO shift) {
 		logger.info("Request received: POST /shift/add - Request Body: {}", shift);
-		Shift createdShift = shiftService.createShift(shift);
+		ShiftDTO createdShift = shiftService.createShift(shift);
 		logger.info("Response sent: POST /shift/add - Shift created with ID: {}", createdShift.getShiftId());
 		return createdShift;
 	}
 
 	@GetMapping("/")
-	public List<Shift> getAllShifts() {
+	public List<ShiftDTO> getAllShifts() {
 		logger.info("Request received: GET /shift/");
-		List<Shift> shifts = shiftService.getAllShifts();
+		List<ShiftDTO> shifts = shiftService.getAllShifts();
 		logger.info("Response sent: GET /shift/ - Retrieved {} shifts", shifts.size());
 		return shifts;
 	}
 
 	@GetMapping("/{shiftID}")
-	public ResponseEntity<Shift> getShiftById(@PathVariable Long shiftID) {
+	public ResponseEntity<ShiftDTO> getShiftById(@PathVariable Long shiftID) {
 		logger.info("Request received: GET /shift/{}", shiftID);
-		ResponseEntity<Shift> response = shiftService.getShiftById(shiftID)
+		ResponseEntity<ShiftDTO> response = shiftService.getShiftById(shiftID)
 				.map(ResponseEntity::ok).orElseGet(() -> {
 					logger.warn("Response sent: GET /shift/{} - Shift not found", shiftID);
 					return ResponseEntity.notFound().build();
@@ -56,9 +58,9 @@ public class ShiftController {
 	}
 
 	@PutMapping("/{id}")
-	public Shift update(@PathVariable Long id, @RequestBody Shift shift) {
+	public ShiftDTO update(@PathVariable Long id,@Valid @RequestBody ShiftDTO shift) {
 		logger.info("Request received: PUT /shift/{} - Request Body: {}", id, shift);
-		Shift updatedShift = shiftService.updateShift(id, shift);
+		ShiftDTO updatedShift = shiftService.updateShift(id, shift);
 		logger.info("Response sent: PUT /shift/{} - Shift updated", id);
 		return updatedShift;
 	}

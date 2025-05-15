@@ -15,8 +15,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.leave.lams.dto.LeaveBalanceDTO;
 import com.leave.lams.model.LeaveBalance;
 import com.leave.lams.service.LeaveBalanceService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/leaveBalances")
@@ -28,25 +31,25 @@ public class LeaveBalanceController {
 	private LeaveBalanceService leaveBalanceService;
 
 	@PostMapping("/add")
-	public LeaveBalance createLeaveBalance(@RequestBody LeaveBalance leaveBalance) {
+	public LeaveBalanceDTO createLeaveBalance(@Valid @RequestBody LeaveBalanceDTO leaveBalance) {
 		logger.info("Request received: POST /leaveBalances/add - Request Body: {}", leaveBalance);
-		LeaveBalance createdLeaveBalance = leaveBalanceService.createLeaveBalance(leaveBalance);
+		LeaveBalanceDTO createdLeaveBalance = leaveBalanceService.createLeaveBalance(leaveBalance);
 		logger.info("Response sent: POST /leaveBalances/add - LeaveBalance created with ID: {}", createdLeaveBalance);
 		return createdLeaveBalance;
 	}
 
 	@GetMapping("/")
-	public List<LeaveBalance> getAllLeaveBalances() {
+	public List<LeaveBalanceDTO> getAllLeaveBalances() {
 		logger.info("Request received: GET /leaveBalances/");
-		List<LeaveBalance> leaveBalances = leaveBalanceService.getAllLeaveBalances();
+		List<LeaveBalanceDTO> leaveBalances = leaveBalanceService.getAllLeaveBalances();
 		logger.info("Response sent: GET /leaveBalances/ - Retrieved {} leave balances", leaveBalances.size());
 		return leaveBalances;
 	}
 
 	@GetMapping("/{employeeID}")
-	public ResponseEntity<LeaveBalance> getLeaveBalanceById(@PathVariable Long employeeID) {
+	public ResponseEntity<LeaveBalanceDTO> getLeaveBalanceById(@PathVariable Long employeeID) {
 		logger.info("Request received: GET /leaveBalances/{}", employeeID);
-		ResponseEntity<LeaveBalance> response = leaveBalanceService.getLeaveBalanceById(employeeID)
+		ResponseEntity<LeaveBalanceDTO> response = leaveBalanceService.getLeaveBalanceById(employeeID)
 				.map(ResponseEntity::ok).orElseGet(() -> {
 					logger.warn("Response sent: GET /leaveBalances/{} - LeaveBalance not found", employeeID);
 					return ResponseEntity.notFound().build();
@@ -56,9 +59,9 @@ public class LeaveBalanceController {
 	}
 
 	@PutMapping("/{id}")
-	public LeaveBalance update(@PathVariable Long id, @RequestBody LeaveBalance leaveBalance) {
+	public LeaveBalanceDTO update(@PathVariable Long id,@Valid @RequestBody LeaveBalanceDTO leaveBalance) {
 		logger.info("Request received: PUT /leaveBalances/{} - Request Body: {}", id, leaveBalance);
-		LeaveBalance updatedLeaveBalance = leaveBalanceService.updateLeaveBalance(id, leaveBalance);
+		LeaveBalanceDTO updatedLeaveBalance = leaveBalanceService.updateLeaveBalance(id, leaveBalance);
 		logger.info("Response sent: PUT /leaveBalances/{} - LeaveBalance updated", id);
 		return updatedLeaveBalance;
 	}
