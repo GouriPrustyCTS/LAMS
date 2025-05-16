@@ -17,7 +17,7 @@ public interface AttendanceService {
 	public List<AttendanceDTO> getAllAttendances();
 
 	// In a concrete implementation, log the start and end of the getAttendanceById operation
-	public Optional<AttendanceDTO> getAttendanceById(Long attendanceId);
+	public AttendanceDTO getAttendanceById(Long attendanceId);
 
 	// In a concrete implementation, log the start and end of the getAttendanceByEmployee operation
 	public List<AttendanceDTO> getAttendanceByEmployee(Long employeeId);
@@ -26,7 +26,7 @@ public interface AttendanceService {
 	public AttendanceDTO addAttendance(AttendanceDTO attendance);
 
 	// In a concrete implementation, log the start and end of the updateAttendance operation
-	public AttendanceDTO updatAttendance(long id, AttendanceDTO attendance);
+	public AttendanceDTO updatAttendance(Long id, AttendanceDTO attendanceDto);
 	
 	// In a concrete implementation, log the start and end of the deleteAttendance operation
 	public void deleteAttendance(Long attendanceId);

@@ -1,23 +1,15 @@
 package com.leave.lams.dao;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.leave.lams.dto.EmployeeDTO;
-import com.leave.lams.dto.ShiftDTO;
+import com.leave.lams.exception.EmployeeNotFoundException;
 import com.leave.lams.mapper.EmployeeMapper;
-import com.leave.lams.model.Attendance;
 import com.leave.lams.model.Employee;
-import com.leave.lams.model.LeaveBalance;
-import com.leave.lams.model.LeaveRequest;
-import com.leave.lams.model.Report;
-import com.leave.lams.model.Shift;
 import com.leave.lams.repository.EmployeeRepository;
 import com.leave.lams.service.EmployeeService;
 
@@ -35,46 +27,43 @@ public class EmployeeDAO implements EmployeeService {
 
 	public List<EmployeeDTO> getAllEmployees() {
 		List<Employee> employees = employeeRepository.findAll();
-		return employees.stream().map(s -> mapper.toDTo(s)).collect(Collectors.toList());
+        if (employees.isEmpty()) {
+            throw new EmployeeNotFoundException("No employees found.");
+        }
+        List<EmployeeDTO> employeeDtos = employees.stream().map(mapper::toDTo).collect(Collectors.toList());
+        return employeeDtos;
 	}
 
-	public Optional<EmployeeDTO> getEmployeeById(Long id) {
-		Optional<Employee> employee = employeeRepository.findById(id);
-		if (employee.isPresent()) {
-			 return Optional.of(mapper.toDTo(employee.get()));
-		} else {
-			return Optional.empty();
-		}
+	public EmployeeDTO getEmployeeById(Long id) {
+		  Employee employee = employeeRepository.findById(id)
+	                .orElseThrow(() -> new EmployeeNotFoundException("Employee not found with ID: " + id));
+	        return mapper.toDTo(employee);
 	}
 
 	@Transactional
-	public EmployeeDTO addEmployee(EmployeeDTO employee) {
-		Employee emp = mapper.toEntity(employee);
-		Employee savedEmployee = employeeRepository.save(emp);
-		EmployeeDTO dtoRes = mapper.toDTo(savedEmployee);
-		return dtoRes;
+	public EmployeeDTO addEmployee(EmployeeDTO employeeDto) {
+		Employee employee = mapper.toEntity(employeeDto);
+        Employee savedEmployee = employeeRepository.save(employee);
+        return mapper.toDTo(savedEmployee);
 	}
 
 	@Override
-	public EmployeeDTO updateEmployee(long id, EmployeeDTO employee) {
-		Optional<Employee> existingOptional = employeeRepository.findById(id);
-		if (existingOptional.isPresent()) {
-			Employee emp = existingOptional.get();
-			
-			if(!emp.getEmployeeId().equals(employee.getEmployeeId())) {
-				throw new IllegalArgumentException("Employee ID does not match the owner of this record.");
-			}
-			
-			emp.setName(employee.getName());
-			emp.setEmail(employee.getEmail());
-			Employee updatedEmployee = employeeRepository.save(emp);
-			return mapper.toDTo(updatedEmployee);
-		}
-		return null;
+	public EmployeeDTO updateEmployee(long id, EmployeeDTO employeeDto) {
+        employeeRepository.findById(id)
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee not found with ID: " + id));
+ 
+        Employee updatedEmployee = mapper.toEntity(employeeDto);
+        updatedEmployee.setEmployeeId(id); // Ensure correct ID is retained
+        updatedEmployee = employeeRepository.save(updatedEmployee);
+ 
+        return mapper.toDTo(updatedEmployee);
 	}
 
 	public void deleteEmployee(Long id) {
-		employeeRepository.deleteById(id);
+        if (!employeeRepository.existsById(id)) {
+            throw new EmployeeNotFoundException("Employee not found with ID: " + id);
+        }
+        employeeRepository.deleteById(id);
 	}
 
 }

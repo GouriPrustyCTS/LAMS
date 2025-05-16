@@ -8,66 +8,60 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.leave.lams.dto.LeaveBalanceDTO;
+import com.leave.lams.exception.LeaveBalanceNotFoundException;
 import com.leave.lams.mapper.LeaveBalanceMapper;
 import com.leave.lams.model.LeaveBalance;
 import com.leave.lams.repository.LeaveBalanceRepository;
 import com.leave.lams.service.LeaveBalanceService;
 
 import jakarta.transaction.Transactional;
-
 @Service
 public class LeaveBalanceDAO implements LeaveBalanceService {
 
-	@Autowired
-	private LeaveBalanceRepository leaveBalanceRepository;
+    @Autowired
+    private LeaveBalanceRepository leaveBalanceRepository;
 
-	@Autowired
-	private LeaveBalanceMapper mapper;
+    @Autowired
+    private LeaveBalanceMapper mapper;
 
-	public LeaveBalanceDTO createLeaveBalance(LeaveBalanceDTO leaveBalance) {
-		LeaveBalance leave = mapper.toEntity(leaveBalance);
-		LeaveBalance savedLeave = leaveBalanceRepository.save(leave);
-		LeaveBalanceDTO dtoRes = mapper.toDTo(savedLeave);
-		return dtoRes;
-	}
+    public LeaveBalanceDTO createLeaveBalance(LeaveBalanceDTO leaveBalance) {
+        LeaveBalance leave = mapper.toEntity(leaveBalance);
+        LeaveBalance savedLeave = leaveBalanceRepository.save(leave);
+        return mapper.toDTo(savedLeave);
+    }
 
-	public List<LeaveBalanceDTO> getAllLeaveBalances() {
-		List<LeaveBalance> leaves = leaveBalanceRepository.findAll();
-		return leaves.stream().map(s -> mapper.toDTo(s)).collect(Collectors.toList());
-	}
+    public List<LeaveBalanceDTO> getAllLeaveBalances() {
+        List<LeaveBalance> leaves = leaveBalanceRepository.findAll();
+        return leaves.stream().map(mapper::toDTo).collect(Collectors.toList());
+    }
 
-	public Optional<LeaveBalanceDTO> getLeaveBalanceById(Long employeeID) {
-		Optional<LeaveBalance> leave = leaveBalanceRepository.findById(employeeID);
-		if (leave.isPresent()) {
-			return Optional.of(mapper.toDTo(leave.get()));
-		}
-		return Optional.empty();
-	}
+    public Optional<LeaveBalanceDTO> getLeaveBalanceById(Long employeeID) {
+        LeaveBalance leave = leaveBalanceRepository.findById(employeeID)
+                .orElseThrow(() -> new LeaveBalanceNotFoundException("Leave balance not found for ID: " + employeeID));
+        return Optional.of(mapper.toDTo(leave));
+    }
 
-	@Override
-	@Transactional
-	public LeaveBalanceDTO updateLeaveBalance(Long id, LeaveBalanceDTO leaveBalance) {
-		Optional<LeaveBalance> optionalExisting = leaveBalanceRepository.findById(id);
+    @Override
+    @Transactional
+    public LeaveBalanceDTO updateLeaveBalance(Long id, LeaveBalanceDTO leaveBalance) {
+        LeaveBalance existing = leaveBalanceRepository.findById(id)
+                .orElseThrow(() -> new LeaveBalanceNotFoundException("Leave balance not found with ID: " + id));
 
-		if (optionalExisting.isEmpty()) {
-			throw new IllegalArgumentException("LeaveBalance not found with ID: " + id);
-		}
+        if (!existing.getEmployee().getEmployeeId().equals(leaveBalance.getEmployeeId())) {
+            throw new IllegalArgumentException("Employee ID mismatch.");
+        }
 
-		LeaveBalance existing = optionalExisting.get();
+        existing.setLeaveType(leaveBalance.getLeaveType());
+        existing.setBalance(leaveBalance.getBalance());
 
-		if (!existing.getEmployee().getEmployeeId().equals(leaveBalance.getEmployeeId())) {
-			throw new IllegalArgumentException("Employee ID mismatch.");
-		}
+        return mapper.toDTo(leaveBalanceRepository.save(existing));
+    }
 
-		// Updating fields
-		existing.setLeaveType(leaveBalance.getLeaveType());
-		existing.setBalance(leaveBalance.getBalance());
-
-		return mapper.toDTo(leaveBalanceRepository.save(existing));
-	}
-
-	@Override
-	public void deleteLeaveBalance(Long id) {
-		leaveBalanceRepository.deleteById(id);
-	}
+    @Override
+    public void deleteLeaveBalance(Long id) {
+        if (!leaveBalanceRepository.existsById(id)) {
+            throw new LeaveBalanceNotFoundException("Cannot delete. Leave balance not found for ID: " + id);
+        }
+        leaveBalanceRepository.deleteById(id);
+    }
 }

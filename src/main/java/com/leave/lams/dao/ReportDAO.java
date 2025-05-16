@@ -24,11 +24,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.leave.lams.dto.ReportDTO;
-import com.leave.lams.dto.ShiftDTO;
+import com.leave.lams.exception.ReportNotFoundException;
 import com.leave.lams.mapper.ReportMapper;
 import com.leave.lams.model.LeaveRequest;
 import com.leave.lams.model.Report;
-import com.leave.lams.model.Shift;
 import com.leave.lams.repository.AttendanceRepository;
 import com.leave.lams.repository.LeaveRequestRepository;
 import com.leave.lams.repository.ReportRepository;
@@ -45,51 +44,87 @@ public class ReportDAO implements ReportService {
 	@Autowired 
 	private ReportMapper mapper;
 
-	public ReportDTO createReport(ReportDTO reportDto) {
-		Report report = mapper.toEntity(reportDto);
-		Report savedReport = reportRepository.save(report);
-		ReportDTO dtoRes = mapper.toDTo(savedReport);
-		return dtoRes;
-	}
-
-	public List<ReportDTO> getAllReports() {
-		List<Report> reports = reportRepository.findAll();
-		return reports.stream().map(s -> mapper.toDTo(s)).collect(Collectors.toList());
-	}
-
-	public Optional<ReportDTO> getReportById(Long reportID) {
-		Optional<Report> shift = reportRepository.findById(reportID);
-	    if (shift.isPresent()) {
-	        return Optional.of(mapper.toDTo(shift.get()));
-	    }
-	    return Optional.empty();
-	}
-
 	@Override
-	public ReportDTO updateReport(Long id, ReportDTO report) {
-		Optional<Report> existing = reportRepository.findById(id);
-		if (existing.isPresent()) {
-			Report r = existing.get();
-			
-			if(!r.getEmployee().getEmployeeId().equals(report.getEmployeeId())) {
-				throw new IllegalArgumentException("Employee ID does not match the owner of this record.");
-			}
-			
-			r.setDateRangeStart(report.getDateRangeStart());
-			r.setDateRangeEnd(report.getDateRangeEnd());
-			r.setGeneratedDate(report.getGeneratedDate());
-			r.setTotalAttendance(report.getTotalAttendance());
-			r.setAbsenteesim(report.getAbsenteesim());
-			
-			return mapper.toDTo(reportRepository.save(r));
-		}
-		return null;
-	}
+    public ReportDTO createReport(ReportDTO reportDto) {
+        try {
+            Report report = mapper.toEntity(reportDto);
+            Report savedReport = reportRepository.save(report);
+            return mapper.toDTo(savedReport);
+        } catch (Exception e) {
+            logger.error("Failed to create report: {}", e.getMessage());
+            throw new RuntimeException("Error while creating report", e);
+        }
+    }
 
-	@Override
-	public void deleteReport(Long id) {
-		reportRepository.deleteById(id);
-	}
+    @Override
+    public List<ReportDTO> getAllReports() {
+        try {
+            List<Report> reports = reportRepository.findAll();
+            return reports.stream().map(mapper::toDTo).collect(Collectors.toList());
+        } catch (Exception e) {
+            logger.error("Failed to fetch reports: {}", e.getMessage());
+            throw new RuntimeException("Error while fetching all reports", e);
+        }
+    }
+
+    @Override
+    public Optional<ReportDTO> getReportById(Long reportID) {
+        try {
+            Optional<Report> reportOpt = reportRepository.findById(reportID);
+            if (reportOpt.isPresent()) {
+                return Optional.of(mapper.toDTo(reportOpt.get()));
+            } else {
+                throw new ReportNotFoundException("Report not found with ID: " + reportID);
+            }
+        } catch (ReportNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Failed to fetch report with ID {}: {}", reportID, e.getMessage());
+            throw new RuntimeException("Error while fetching report by ID", e);
+        }
+    }
+
+    @Override
+    public ReportDTO updateReport(Long id, ReportDTO report) {
+        try {
+            Report existing = reportRepository.findById(id)
+                    .orElseThrow(() -> new ReportNotFoundException("Report not found with ID: " + id));
+
+            if (!existing.getEmployee().getEmployeeId().equals(report.getEmployeeId())) {
+                throw new IllegalArgumentException("Employee ID does not match the owner of this record.");
+            }
+
+            existing.setDateRangeStart(report.getDateRangeStart());
+            existing.setDateRangeEnd(report.getDateRangeEnd());
+            existing.setGeneratedDate(report.getGeneratedDate());
+            existing.setTotalAttendance(report.getTotalAttendance());
+            existing.setAbsenteesim(report.getAbsenteesim());
+
+            return mapper.toDTo(reportRepository.save(existing));
+        } catch (ReportNotFoundException | IllegalArgumentException e) {
+            logger.warn("Update failed: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("Error while updating report with ID {}: {}", id, e.getMessage());
+            throw new RuntimeException("Failed to update report", e);
+        }
+    }
+
+    @Override
+    public void deleteReport(Long id) {
+        try {
+            if (!reportRepository.existsById(id)) {
+                throw new ReportNotFoundException("Cannot delete. Report not found with ID: " + id);
+            }
+            reportRepository.deleteById(id);
+        } catch (ReportNotFoundException e) {
+            logger.warn("Delete failed: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("Error while deleting report with ID {}: {}", id, e.getMessage());
+            throw new RuntimeException("Failed to delete report", e);
+        }
+    }
 	
 //	______________________________________________________________________________________________________________
 	
