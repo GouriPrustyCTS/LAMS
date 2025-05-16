@@ -3,13 +3,16 @@ package com.leave.lams.model;
 import java.util.Date;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-
-import jakarta.persistence.*;
-import lombok.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -18,7 +21,6 @@ import org.slf4j.LoggerFactory;
 @Table(name = "employee")
 public class Employee {
 
-	private static final Logger logger = LoggerFactory.getLogger(Employee.class);
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

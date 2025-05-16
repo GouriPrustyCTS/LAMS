@@ -1,6 +1,7 @@
 package com.leave.lams.controller;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,14 +40,18 @@ public class EmployeeController {
 
 	@GetMapping("/{id}")
 	public ResponseEntity<EmployeeDTO> getEmployeeById(@PathVariable Long id) {
-		logger.info("Request received: GET /employee/{}", id);
-		ResponseEntity<EmployeeDTO> response = employeeService.getEmployeeById(id)
-				.map(ResponseEntity::ok).orElseGet(() -> {
-					logger.warn("Response sent: GET /employee/{} - Employee not found", id);
-					return ResponseEntity.notFound().build();
-				});
-		logger.info("Response sent: GET /employee/{}", id);
-		return response;
+	    logger.info("Request received: GET /employee/{}", id);
+	    Optional<EmployeeDTO> employeeDtoOptional = Optional.of(employeeService.getEmployeeById(id)) ; // Get the Optional
+	    ResponseEntity<EmployeeDTO> response = employeeDtoOptional
+	        .map(employeeDto -> { // Use map to transform the EmployeeDTO *within* the Optional
+	            logger.info("Response sent: GET /employee/{} - Employee found", id);
+	            return ResponseEntity.ok(employeeDto); // *Return* a ResponseEntity.ok()
+	        })
+	        .orElseGet(() -> {
+	            logger.warn("Response sent: GET /employee/{} - Employee not found", id);
+	            return ResponseEntity.notFound().build();
+	        });
+	    return response;
 	}
 
 	@PostMapping("/add")

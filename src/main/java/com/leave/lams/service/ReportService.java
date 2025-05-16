@@ -1,14 +1,13 @@
 package com.leave.lams.service;
 
-import com.leave.lams.dto.ReportDTO;
-import com.leave.lams.model.Report;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
 import org.knowm.xchart.PieChart;
 import org.springframework.stereotype.Service;
+
+import com.leave.lams.dto.ReportDTO;
 
 @Service
 public interface ReportService {

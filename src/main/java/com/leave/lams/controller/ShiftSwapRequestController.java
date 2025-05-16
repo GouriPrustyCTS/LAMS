@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.leave.lams.dto.ShiftSwapRequestDTO;
-import com.leave.lams.model.ShiftSwapRequest;
 import com.leave.lams.service.ShiftSwapRequestService;
 
 import jakarta.validation.Valid;

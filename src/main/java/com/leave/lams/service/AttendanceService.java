@@ -2,7 +2,6 @@ package com.leave.lams.service;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 import com.leave.lams.dto.AttendanceDTO;
 

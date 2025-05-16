@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.leave.lams.dto.LeaveBalanceDTO;
-import com.leave.lams.model.LeaveBalance;
 import com.leave.lams.service.LeaveBalanceService;
 
 import jakarta.validation.Valid;

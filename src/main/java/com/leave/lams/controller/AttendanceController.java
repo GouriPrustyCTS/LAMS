@@ -2,7 +2,6 @@ package com.leave.lams.controller;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,10 +41,10 @@ public class AttendanceController {
 	@GetMapping("/{id}")
 	public ResponseEntity<AttendanceDTO> getAttendanceById(@PathVariable Long id) {
 		logger.info("Request received: GET /attendance/{}", id);
-		Optional<AttendanceDTO> attendance = attendanceService.getAttendanceById(id);
-		if (attendance.isPresent()) {
+		AttendanceDTO attendance = attendanceService.getAttendanceById(id);
+		if (attendance != null) {
 			logger.info("Response sent: GET /attendance/{} - Attendance found.", id);
-			return ResponseEntity.ok(attendance.get());
+			return ResponseEntity.ok(attendance);
 		} else {
 			logger.warn("Response sent: GET /attendance/{} - Attendance NOT found.", id);
 			return ResponseEntity.notFound().build();

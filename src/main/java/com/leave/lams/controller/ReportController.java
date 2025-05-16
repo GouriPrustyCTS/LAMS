@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.leave.lams.dto.ReportDTO;
-import com.leave.lams.model.Report;
 import com.leave.lams.service.ReportService;
 
 import jakarta.validation.Valid;

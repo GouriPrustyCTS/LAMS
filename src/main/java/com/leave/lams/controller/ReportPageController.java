@@ -37,7 +37,7 @@ import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.leave.lams.dao.ReportDAO;
-import com.leave.lams.model.LeaveRequest;
+import com.leave.lams.dto.LeaveRequestDTO;
 import com.leave.lams.service.LeaveRequestService;
 import com.leave.lams.service.ReportService;
 
@@ -122,7 +122,7 @@ public class ReportPageController {
     @GetMapping("/leave-report-page")
     public String showLeaveReportPage(Model model) {
         logger.info("Accessing leave report page.");
-        List<LeaveRequest> leaveReportData = leaveRequestService.getLeaveReportDataSortedByMonth();
+        List<LeaveRequestDTO> leaveReportData = leaveRequestService.getLeaveReportDataSortedByMonth();
         model.addAttribute("leaveReportData", leaveReportData);
         return "leave_report_download";
     }
@@ -131,7 +131,7 @@ public class ReportPageController {
     public ResponseEntity<byte[]> downloadLeaveReportSortedByMonth() {
         logger.info("Starting to generate leave report.");
         try {
-            List<LeaveRequest> leaveReportData = leaveRequestService.getLeaveReportDataSortedByMonth();
+            List<LeaveRequestDTO> leaveReportData = leaveRequestService.getLeaveReportDataSortedByMonth();
 
             try (Workbook workbook = new XSSFWorkbook()) {
 				Sheet sheet = workbook.createSheet("Leave Details Sorted By Month");
@@ -150,10 +150,10 @@ public class ReportPageController {
 
 				// Populate data rows
 				int rowNum = 1;
-				for (LeaveRequest leave : leaveReportData) {
+				for (LeaveRequestDTO leave : leaveReportData) {
 				    Row row = sheet.createRow(rowNum++);
-				    row.createCell(0).setCellValue(leave.getEmployee().getEmployeeId());
-				    row.createCell(1).setCellValue(leave.getEmployee().getName());
+				    row.createCell(0).setCellValue(leave.getEmployeeId());
+				    row.createCell(1).setCellValue(leave.getName());
 				    row.createCell(2).setCellValue(leave.getReason());
 				    if (leave.getEndDate() != null) {
 				        row.createCell(3).setCellValue(dateFormat.format(java.sql.Date.valueOf(leave.getEndDate())));
@@ -188,7 +188,7 @@ public class ReportPageController {
     public ResponseEntity<byte[]> downloadLeaveReportPdf() {
         logger.info("Starting to generate leave report PDF.");
         try {
-            List<LeaveRequest> leaveReportData = leaveRequestService.getLeaveReportDataSortedByMonth();
+            List<LeaveRequestDTO> leaveReportData = leaveRequestService.getLeaveReportDataSortedByMonth();
 
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             Document document = new Document(PageSize.A4.rotate());
@@ -223,9 +223,9 @@ public class ReportPageController {
 
             // Add table data
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-            for (LeaveRequest leave : leaveReportData) {
-                table.addCell(new Paragraph(Long.toString(leave.getEmployee().getEmployeeId()), cellFont));
-                table.addCell(new Paragraph(leave.getEmployee().getName(), cellFont));
+            for (LeaveRequestDTO leave : leaveReportData) {
+                table.addCell(new Paragraph(Long.toString(leave.getEmployeeId()), cellFont));
+                table.addCell(new Paragraph(leave.getName(), cellFont));
                 table.addCell(new Paragraph(leave.getReason(), cellFont));
                 if (leave.getEndDate() != null) {
                     table.addCell(new Paragraph(dateFormat.format(java.sql.Date.valueOf(leave.getEndDate())), cellFont));
@@ -263,7 +263,7 @@ public class ReportPageController {
     public String showMyLeaveRecords(@PathVariable Long empId, Model model) {
         logger.info("Entering showMyLeaveRecords with empId: {}", empId); // Added logging
         try {
-            List<LeaveRequest> leaveReportData = leaveRequestService.getLeaveDetailsByEmployee(empId);
+            List<LeaveRequestDTO> leaveReportData = leaveRequestService.getLeaveDetailsByEmployee(empId);
             model.addAttribute("leaveReportData", leaveReportData);
             model.addAttribute("empId", empId);
             logger.info("Successfully retrieved leave records for empId: {}", empId);
@@ -279,7 +279,7 @@ public class ReportPageController {
     public ResponseEntity<byte[]> downloadEmployeeLeaveReportPdf(@PathVariable Long empId) {
         logger.info("Starting to generate employee leave report PDF for empId: {}", empId);
         try {
-            List<LeaveRequest> leaveReportData = leaveRequestService.getLeaveDetailsByEmployee(empId);
+            List<LeaveRequestDTO> leaveReportData = leaveRequestService.getLeaveDetailsByEmployee(empId);
 
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             Document document = new Document(PageSize.A4);
@@ -315,9 +315,9 @@ public class ReportPageController {
 
             // Add table data
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-            for (LeaveRequest leave : leaveReportData) {
-                table.addCell(new Paragraph(Long.toString(leave.getEmployee().getEmployeeId()), cellFont));
-                table.addCell(new Paragraph(leave.getEmployee().getName(), cellFont));
+            for (LeaveRequestDTO leave : leaveReportData) {
+                table.addCell(new Paragraph(Long.toString(leave.getEmployeeId()), cellFont));
+                table.addCell(new Paragraph(leave.getName(), cellFont));
                 table.addCell(new Paragraph(leave.getReason(), cellFont));
                 if (leave.getEndDate() != null) {
                     table.addCell(new Paragraph(dateFormat.format(java.sql.Date.valueOf(leave.getEndDate())), cellFont));
