@@ -1,28 +1,21 @@
 package com.leave.lams.dao;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import com.leave.lams.model.Employee;
+import com.leave.lams.model.LeaveRequest;
+import com.leave.lams.repository.LeaveRequestRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import com.leave.lams.model.Employee;
-import com.leave.lams.model.LeaveRequest;
-import com.leave.lams.repository.LeaveRequestRepository;
 
 public class LeaveRequestDAOTest {
 
@@ -40,51 +33,87 @@ public class LeaveRequestDAOTest {
     @Test
     public void testCreateLeaveRequest() {
         LeaveRequest leaveRequest = new LeaveRequest();
+        leaveRequest.setLeaveRequestId(1L);
+
         when(leaveRequestRepository.save(leaveRequest)).thenReturn(leaveRequest);
 
-        LeaveRequest result = leaveRequestDAO.createLeaveRequest(leaveRequest);
-        assertEquals(leaveRequest, result);
+        LeaveRequest result = leaveRequestDAO.createLeaveRequest(leaveRequest);	//error
+        assertNotNull(result);
+        assertEquals(1L, result.getLeaveRequestId());
     }
 
     @Test
     public void testGetAllLeaveRequests() {
-        List<LeaveRequest> leaveRequests = Arrays.asList(new LeaveRequest(), new LeaveRequest());
-        when(leaveRequestRepository.findAll()).thenReturn(leaveRequests);
+        List<LeaveRequest> mockList = Arrays.asList(new LeaveRequest(), new LeaveRequest());
+        when(leaveRequestRepository.findAll()).thenReturn(mockList);
 
-        List<LeaveRequest> result = leaveRequestDAO.getAllLeaveRequests();
+        List<LeaveRequest> result = leaveRequestDAO.getAllLeaveRequests();//error
         assertEquals(2, result.size());
     }
 
     @Test
     public void testGetLeaveRequestById() {
-        LeaveRequest leaveRequest = new LeaveRequest();
-        when(leaveRequestRepository.findById(1L)).thenReturn(Optional.of(leaveRequest));
+        LeaveRequest mockRequest = new LeaveRequest();
+        mockRequest.setLeaveRequestId(1L);
 
-        Optional<LeaveRequest> result = leaveRequestDAO.getLeaveRequestById(1L);
+        when(leaveRequestRepository.findById(1L)).thenReturn(Optional.of(mockRequest));
+
+        Optional<LeaveRequest> result = leaveRequestDAO.getLeaveRequestById(1L);//error
         assertTrue(result.isPresent());
-        assertEquals(leaveRequest, result.get());
+        assertEquals(1L, result.get().getLeaveRequestId());
+    }
+
+    @Test
+    public void testGetLeaveRequestById_NotFound() {
+        when(leaveRequestRepository.findById(999L)).thenReturn(Optional.empty());
+
+        Optional<LeaveRequest> result = leaveRequestDAO.getLeaveRequestById(999L);//error
+        assertFalse(result.isPresent());
     }
 
     @Test
     public void testUpdateLeaveRequest() {
-        LeaveRequest existingLeaveRequest = new LeaveRequest();
-        Employee employee = new Employee();
-        employee.setEmployeeId(1L);
-        existingLeaveRequest.setEmployee(employee);
+        LeaveRequest existing = new LeaveRequest();
+        existing.setLeaveRequestId(1L);
+        Employee emp = new Employee();
+        emp.setEmployeeId(1L);
+        existing.setEmployee(emp);
 
-        LeaveRequest updatedLeaveRequest = new LeaveRequest();
-        updatedLeaveRequest.setEmployee(employee);
-        updatedLeaveRequest.setLeaveRequestId(1L);
+        LeaveRequest updated = new LeaveRequest();
+        updated.setLeaveRequestId(1L);
+        updated.setEmployee(emp);
 
-        when(leaveRequestRepository.findById(1L)).thenReturn(Optional.of(existingLeaveRequest));
-        when(leaveRequestRepository.save(updatedLeaveRequest)).thenReturn(updatedLeaveRequest);
+        when(leaveRequestRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(leaveRequestRepository.save(updated)).thenReturn(updated);
 
-        LeaveRequest result = leaveRequestDAO.updateLeaveRequest(1L, updatedLeaveRequest);
-        assertEquals(updatedLeaveRequest, result);
+        LeaveRequest result = leaveRequestDAO.updateLeaveRequest(1L, updated);//error
+        assertNotNull(result);
+        assertEquals(1L, result.getLeaveRequestId());
     }
 
     @Test
-    public void testDeleteLeaveRequest() {
+    public void testUpdateLeaveRequest_MismatchedEmployeeId() {
+        LeaveRequest existing = new LeaveRequest();
+        Employee emp1 = new Employee();
+        emp1.setEmployeeId(1L);
+        existing.setEmployee(emp1);
+
+        LeaveRequest updated = new LeaveRequest();
+        Employee emp2 = new Employee();
+        emp2.setEmployeeId(2L);
+        updated.setEmployee(emp2);
+
+        when(leaveRequestRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        Exception ex = assertThrows(IllegalArgumentException.class, () ->
+            leaveRequestDAO.updateLeaveRequest(1L, updated)//error
+        );
+
+        assertEquals("Employee ID does not match the owner of this record.", ex.getMessage());
+    }
+
+    @Test
+    public void testDeleteLeaveRequest_Success() {
         when(leaveRequestRepository.existsById(1L)).thenReturn(true);
         doNothing().when(leaveRequestRepository).deleteById(1L);
 
@@ -99,49 +128,23 @@ public class LeaveRequestDAOTest {
 
         boolean result = leaveRequestDAO.deleteLeaveRequest(1L);
         assertFalse(result);
-        verify(leaveRequestRepository, never()).deleteById(1L);
+        verify(leaveRequestRepository, never()).deleteById(anyLong());
     }
-    
-    @Test
-    public void testGetLeaveRequestById_NotFound() {
-        when(leaveRequestRepository.findById(999L)).thenReturn(Optional.empty());
-        Optional<LeaveRequest> result = leaveRequestDAO.getLeaveRequestById(999L);
-        assertFalse(result.isPresent());
-    }
-    
-    @Test
-    public void testUpdateLeaveRequest_MismatchedEmployeeId() {
-        LeaveRequest existing = new LeaveRequest();
-        Employee emp1 = new Employee();
-        emp1.setEmployeeId(1L);
-        existing.setEmployee(emp1);
 
-        LeaveRequest updated = new LeaveRequest();
-        Employee emp2 = new Employee();
-        emp2.setEmployeeId(2L); // Mismatch
-        updated.setEmployee(emp2);
-
-        when(leaveRequestRepository.findById(1L)).thenReturn(Optional.of(existing));
-
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-            leaveRequestDAO.updateLeaveRequest(1L, updated)
-        );
-        assertEquals("Employee ID does not match the owner of this record.", exception.getMessage());
-    }
-    
     @Test
     public void testUpdateLeaveStatus() {
         LeaveRequest leaveRequest = new LeaveRequest();
+        leaveRequest.setLeaveRequestId(1L);
         leaveRequest.setStatus("PENDING");
 
         when(leaveRequestRepository.findById(1L)).thenReturn(Optional.of(leaveRequest));
+
         leaveRequest.setStatus("APPROVED");
         when(leaveRequestRepository.save(leaveRequest)).thenReturn(leaveRequest);
 
-        LeaveRequest updated = leaveRequestDAO.createLeaveRequest(leaveRequest);
+        LeaveRequest updated = leaveRequestDAO.createLeaveRequest(leaveRequest);//error
         assertEquals("APPROVED", updated.getStatus());
     }
-
-
-
 }
+
+
