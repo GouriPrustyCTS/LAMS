@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,10 +12,10 @@ import org.springframework.stereotype.Service;
 
 import com.leave.lams.dto.AttendanceDTO;
 import com.leave.lams.exception.AttendanceNotFoundException;
-import com.leave.lams.exception.EmployeeNotFoundException;
 import com.leave.lams.exception.InvalidInputException;
 import com.leave.lams.mapper.AttendanceMapper;
 import com.leave.lams.model.Attendance;
+import com.leave.lams.model.Employee;
 import com.leave.lams.repository.AttendanceRepository;
 import com.leave.lams.repository.EmployeeRepository;
 import com.leave.lams.service.AttendanceService;
@@ -63,11 +64,21 @@ public class AttendanceDAO implements AttendanceService {
 
 	@Override
 	public void clockIn(Long employeeId) {
-		employeeRepository.findById(employeeId)
-                .orElseThrow(() -> new EmployeeNotFoundException("Employee not found with ID: " + employeeId));
- 
-        AttendanceDTO attendanceDto = new AttendanceDTO();
-        attendanceRepository.save(mapper.toEntity(attendanceDto));
+        Optional<Employee> employee = employeeRepository.findById(employeeId);
+
+        if (employee.isPresent()) {
+            AttendanceDTO attendanceDto = new AttendanceDTO();
+            attendanceDto.setEmployeeId(employeeId);
+            attendanceDto.setName(employee.get().getName());
+            attendanceDto.setClockInTime(LocalDateTime.now());
+            attendanceDto.setAttendanceDate(LocalDate.now());
+
+            Attendance attendance = mapper.toEntity(attendanceDto);
+            attendanceRepository.save(attendance);
+            
+        } else {
+            throw new RuntimeException("Employee not found with ID: " + employeeId);
+        }
 
 	}
 

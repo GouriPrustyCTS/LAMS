@@ -27,58 +27,13 @@ public class LamsApplication {
 
 
 /*	[POST] -> localhost:8080/employee/add
- {
-  "name": "Alice Johnson",
-  "department": "IT",
-  "hireDate": "2025-06-01",
-  "email": "john@gmail.com",
-  "jobTitle": "FSE",
-  "leaveBalances": [
-    {
-      "leaveType": "Vacation",
-      "balance": 10
-    },
-    {
-      "leaveType": "Sick",
-      "balance": 5
-    }
-  ],
-  "leaveRequests": [
-    {
-      "leaveType": "Vacation",
-      "startDate": "2025-06-01",
-      "endDate": "2025-06-05",
-      "requestDate": "2025-05-07T09:00:00",
-      "reason": "Vacation Trip",
-      "status": "Approved"
-    }
-  ],
-  "shifts": [
-    {
-      "shiftDate": "2025-05-10",
-      "shiftStartTime": "09:00",
-      "shiftEndTime": "17:00"
-    }
-  ],
-  "attendances": [
-    {
-      "clockInTime": "2025-05-07T09:00:00",
-      "clockOutTime": "2025-05-07T17:00:00",
-      "workHours": 8,
-      "attendanceDate": "2025-05-10"
-    }
-  ],
-  "reports": [
-    {
-      "dateRangeStart": "2025-05-01",
-      "dateRangeEnd": "2025-05-01",
-      "generatedDate": "2025-05-07T17:00:00",
-      "totalAttendance": 5,
-      "absenteesim": 1
-    }
-  ]
-} 
-
+  {
+  "name": "Karthick",
+  "department": "CSE",
+  "hireDate": "2025-03-17",
+  "email": "karti@gmail.com",
+  "jobTitle": "White Hacker"
+ }
 
 ___________[POST] -> /attendance/add
 
@@ -87,31 +42,25 @@ ___________[POST] -> /attendance/add
     "clockOutTime": "2025-05-07T17:00:00",
     "workHours": 8,
     "attendanceDate": "2025-05-10",
-    "employee":{
-        "employeeId":2
-    }
+    "employeeId":4
 }
 
 __________[POS] -> /leaveBalances/add
 
 {
-    "leaveType": "Vacation",
-    "balance": 25,
-    "employee":{
-        "employeeId":2
-    }
+    "leaveType": "College Exams",
+    "balance": 10,
+    "employeeId":2
 }
 __________[POST] -> /leaveRequests/add
 {
-      "leaveType": "Marriage",
+      "leaveType": "College Exams",	//leaveType value should be present
       "startDate": "2025-06-01",
-      "endDate": "2025-06-05",
+      "endDate": "2025-06-02",
       "requestDate": "2025-05-07T09:00:00",
-      "reason": "Honey moon",
-      "status": "Approved",
-      "employee":{
-        "employeeId":2
-      }
+      "reason": "Project work",
+      "status": "PENDING",
+      "employeeId":1
 }
 __________[POST] -> /attendanceReports/add
 
@@ -119,21 +68,32 @@ __________[POST] -> /attendanceReports/add
       "dateRangeStart": "2025-05-01",
       "dateRangeEnd": "2025-05-05",
       "generatedDate": "2025-05-07T17:00:00",
-      "totalAttendance": 10,
-      "absenteesim": 2,
-      "employee":{
-        "employeeId":2
-      }
+      "totalAttendance": 1,
+      "absenteesim": 0,
+      "employeeId":5
 }
 __________[POST] -> /shift/add
 {
       "shiftDate": "2025-05-10",
       "shiftStartTime": "09:00",
       "shiftEndTime": "19:00",
-      "employee":{
         "employeeId":2
-      }
-    }
+}
     
     
+    _______[POST] -> /swap/request
+{
+    "fromEmployeeId": 3,
+    "toEmployeeId": 5,
+    "fromShiftId": 2,
+    "toShiftId": 4,
+    "status": "PENDING"
+}
+
+
+
+__________________[GET] -> charts
+
+../reports/tru-time-bar-chart?empId=1
+
  */

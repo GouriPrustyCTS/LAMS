@@ -26,7 +26,7 @@ public class LeaveBalance {
     @ManyToOne
     @JoinColumn(name = "employeeId", nullable = false)
 //    @JsonBackReference
-    @JsonIncludeProperties({"employeeId"})
+    @JsonIncludeProperties({"employeeId","name"})
     private Employee employee;
     
     private String leaveType;

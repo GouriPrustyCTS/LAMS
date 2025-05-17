@@ -13,34 +13,50 @@ import com.leave.lams.dto.LeaveRequestDTO;
 import com.leave.lams.exception.LeaveBalanceNotFoundException;
 import com.leave.lams.exception.LeaveRequestNotFoundException;
 import com.leave.lams.mapper.LeaveRequestMapper;
+import com.leave.lams.model.Employee;
 import com.leave.lams.model.LeaveBalance;
 import com.leave.lams.model.LeaveRequest;
+import com.leave.lams.repository.EmployeeRepository;
 import com.leave.lams.repository.LeaveBalanceRepository;
 import com.leave.lams.repository.LeaveRequestRepository;
 import com.leave.lams.service.LeaveRequestService;
 @Service
 public class LeaveRequestDAO implements LeaveRequestService {
+	
 
     @Autowired
     private LeaveRequestRepository leaveRequestRepository;
 
     @Autowired
     private LeaveBalanceRepository leaveBalanceRepository;
+    
+    @Autowired
+    private EmployeeRepository employeeRepository;
 
     @Autowired
     private LeaveRequestMapper mapper;
 
-    public LeaveRequestDTO createLeaveRequest(LeaveRequestDTO leaveRequest) {
+    public LeaveRequestDTO createLeaveRequest(LeaveRequestDTO leaveRequestDto) {
+        // Check leave balance
         Optional<LeaveBalance> balance = leaveBalanceRepository
-                .findByEmployeeEmployeeIdAndLeaveType(leaveRequest.getEmployeeId(), leaveRequest.getLeaveType());
+            .findByEmployeeEmployeeIdAndLeaveType(leaveRequestDto.getEmployeeId(), leaveRequestDto.getLeaveType());
 
         if (balance.isEmpty() || balance.get().getBalance() <= 0) {
-            throw new LeaveBalanceNotFoundException("Insufficient leave balance for employee ID: " + leaveRequest.getEmployeeId());
+            throw new LeaveBalanceNotFoundException("Insufficient leave balance in the leave type for employee ID : " + leaveRequestDto.getEmployeeId());
         }
 
-        LeaveRequest entity = mapper.toEntity(leaveRequest);
-        return mapper.toDTo(leaveRequestRepository.save(entity));
+        // Map DTO to Entity
+        LeaveRequest leaveRequest = mapper.toEntity(leaveRequestDto);
+
+        // Set Employee manually (prevent ModelMapper recursion or wrong mapping)
+        Employee emp = employeeRepository.findById(leaveRequestDto.getEmployeeId())
+            .orElseThrow(() -> new RuntimeException("Employee not found with ID " + leaveRequestDto.getEmployeeId()));
+        leaveRequest.setEmployee(emp);
+
+        // Save and return mapped DTO
+        return mapper.toDTo(leaveRequestRepository.save(leaveRequest));
     }
+
 
     public List<LeaveRequestDTO> getAllLeaveRequests() {
         List<LeaveRequest> leaveRequests = leaveRequestRepository.findAll();
@@ -70,7 +86,7 @@ public class LeaveRequestDAO implements LeaveRequestService {
         LeaveRequest request = leaveRequestRepository.findById(id)
                 .orElseThrow(() -> new LeaveRequestNotFoundException("Leave request not found with ID: " + id));
 
-        if (request.getStatus().equals("APPROVED")) {
+        if (request.getStatus().equals("PENDING") && newStatus.equals("APPROVED")) {
             long days = ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate()) + 1;
 
             LeaveBalance balance = leaveBalanceRepository

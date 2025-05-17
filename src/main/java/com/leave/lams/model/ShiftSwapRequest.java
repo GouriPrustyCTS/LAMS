@@ -25,12 +25,12 @@ public class ShiftSwapRequest {
 
     @ManyToOne
     @JoinColumn(name = "from_employee_id", nullable = false)
-    @JsonIncludeProperties({"employeeId"})
+    @JsonIncludeProperties({"employeeId","name"})
     private Employee fromEmployee;
 
     @ManyToOne
     @JoinColumn(name = "to_employee_id", nullable = false)
-    @JsonIncludeProperties({"employeeId"})
+    @JsonIncludeProperties({"employeeId","name"})
     private Employee toEmployee;
 
     @ManyToOne

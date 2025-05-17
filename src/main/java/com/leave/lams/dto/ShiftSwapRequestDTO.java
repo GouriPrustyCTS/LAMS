@@ -28,4 +28,5 @@ public class ShiftSwapRequestDTO {
 
 	@Pattern(regexp = "PENDING|APPROVED|REJECTED", message = "Invalid status")
 	private String status;
+	
 }

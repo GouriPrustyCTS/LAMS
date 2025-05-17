@@ -22,4 +22,6 @@ public class LeaveBalanceDTO {
 
 	@NotNull(message = "Employee ID is required")
 	private Long employeeId;
+	
+	private String name;
 }

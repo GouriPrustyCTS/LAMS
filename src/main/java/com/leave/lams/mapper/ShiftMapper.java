@@ -21,7 +21,12 @@ public class ShiftMapper {
 	
 	public ShiftDTO toDTo(Shift entity)
 	{
-		return modelMapper.map(entity, ShiftDTO.class);
+		ShiftDTO dto = modelMapper.map(entity, ShiftDTO.class);
+		if (entity.getEmployee() != null) {
+			dto.setName(entity.getEmployee().getName());
+		}
+		return dto;
+
 	}
 
 }

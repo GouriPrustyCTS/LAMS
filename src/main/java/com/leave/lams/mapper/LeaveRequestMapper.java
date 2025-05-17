@@ -7,6 +7,9 @@ import org.springframework.stereotype.Component;
 import com.leave.lams.dto.LeaveRequestDTO;
 import com.leave.lams.model.LeaveRequest;
 
+
+
+
 @Component
 public class LeaveRequestMapper {
 	@Autowired
@@ -17,6 +20,10 @@ public class LeaveRequestMapper {
 	}
 
 	public LeaveRequestDTO toDTo(LeaveRequest entity) {
-		return modelMapper.map(entity, LeaveRequestDTO.class);
+		LeaveRequestDTO dto = modelMapper.map(entity, LeaveRequestDTO.class);
+		if (entity.getEmployee() != null) {
+			dto.setName(entity.getEmployee().getName());
+		}
+		return dto;
 	}
 }

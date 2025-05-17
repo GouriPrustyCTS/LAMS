@@ -34,4 +34,6 @@ public class ReportDTO {
 
 	@NotNull(message = "Employee ID is required")
 	private Long employeeId;
+	
+	private String name;
 }

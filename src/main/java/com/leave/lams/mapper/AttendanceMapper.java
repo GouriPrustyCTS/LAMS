@@ -17,6 +17,11 @@ public class AttendanceMapper {
 	}
 
 	public AttendanceDTO toDTo(Attendance entity) {
-		return modelMapper.map(entity, AttendanceDTO.class);
+		AttendanceDTO dto = modelMapper.map(entity, AttendanceDTO.class);
+		if (entity.getEmployee() != null) {
+			dto.setName(entity.getEmployee().getName());
+		}
+		return dto;
 	}
+
 }

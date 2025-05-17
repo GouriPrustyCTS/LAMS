@@ -35,6 +35,6 @@ public class Report {
     @ManyToOne
     @JoinColumn(name = "employeeId", nullable = false)
 //    @JsonBackReference
-    @JsonIncludeProperties({"employeeId"})
+    @JsonIncludeProperties({"employeeId","name"})
     private Employee employee;
 }

@@ -33,4 +33,6 @@ public class AttendanceDTO {
 	@DecimalMin(value = "0.0", inclusive = false, message = "Work hours must be greater than 0")
 	@DecimalMax(value = "24.0", message = "Work hours cannot exceed 24")
 	private Double workHours;
+	
+	private String name;
 }

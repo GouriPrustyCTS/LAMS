@@ -60,7 +60,7 @@ public class ShiftSwapRequestController {
         return shiftSwapRequestService.getPendingRequests();
     }
 
-    @PutMapping("/{id}/status") // swap/status?status=APPROVED
+    @PutMapping("/{id}/status") // swap/{id}/status?status=APPROVED
     public ShiftSwapRequestDTO updateStatus(@PathVariable Long id, @RequestParam String status) {
         logger.info("PUT /swap/{}/status - Updating to {}", id, status);
         return shiftSwapRequestService.updateRequestStatus(id, status);

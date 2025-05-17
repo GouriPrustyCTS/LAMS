@@ -18,6 +18,10 @@ public class LeaveBalanceMapper {
 	}
 
 	public LeaveBalanceDTO toDTo(LeaveBalance entity) {
-		return modelMapper.map(entity, LeaveBalanceDTO.class);
+		LeaveBalanceDTO dto = modelMapper.map(entity, LeaveBalanceDTO.class);
+		if (entity.getEmployee() != null) {
+			dto.setName(entity.getEmployee().getName());
+		}
+		return dto;
 	}
 }

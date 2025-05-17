@@ -31,4 +31,5 @@ public class EmployeeDTO {
 
 	@NotNull(message = "Hire date is required")
 	private Date hireDate;
+	
 }

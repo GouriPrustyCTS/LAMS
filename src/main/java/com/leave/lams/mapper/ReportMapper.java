@@ -17,6 +17,10 @@ public class ReportMapper {
 	}
 
 	public ReportDTO toDTo(Report entity) {
-		return modelMapper.map(entity, ReportDTO.class);
+		ReportDTO dto = modelMapper.map(entity, ReportDTO.class);
+		if (entity.getEmployee() != null) {
+			dto.setName(entity.getEmployee().getName());
+		}
+		return dto;
 	}
 }
