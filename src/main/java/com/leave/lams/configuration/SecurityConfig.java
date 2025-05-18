@@ -12,69 +12,53 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.leave.lams.service.EmployeeDetailsService;
+import com.leave.lams.util.JwtAuthenticationFilter;
+
+import jakarta.persistence.criteria.From;
 
 @Configuration
 public class SecurityConfig {
+	@Autowired
+	private JwtAuthenticationFilter jwtFilter;
 
-    @Autowired
-    private EmployeeDetailsService employeeDetailsService;
+	@Autowired
+	private EmployeeDetailsService employeeDetailsService;
 
-    @Bean
-    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/login/**", "/logout","/logout-success", "/login-error").permitAll()
-                .requestMatchers(HttpMethod.PATCH, "/leaverequest/**/status").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.POST, "/shift/add").hasRole("ADMIN")
-                .requestMatchers("/employee/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/swap/**/status").hasRole("ADMIN")
-                .anyRequest().authenticated()
-            )
-            .formLogin(form -> form
-                .loginPage("/login")
-                .loginProcessingUrl("/login")
-                .defaultSuccessUrl("/success", true)
-                .failureUrl("/login-error")
-                .permitAll()
-            )
-            .logout(logout -> logout
-                .logoutUrl("/logout")
-                .logoutSuccessUrl("/logout-success")
-                .invalidateHttpSession(true)
-                .deleteCookies("JSESSIONID")
-                .permitAll()
-            )
-            .sessionManagement(session -> session
-                .invalidSessionUrl("/login")
-                .sessionFixation().newSession()
-                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                .maximumSessions(1)
-                .maxSessionsPreventsLogin(false)
-            )
-            .csrf(csrf -> csrf.disable());
+	@Bean
+	SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+		http.csrf(csrf -> csrf.disable())
+				.authorizeHttpRequests(auth -> auth.requestMatchers("/login", "/register").permitAll()
+						.requestMatchers(HttpMethod.PATCH, "/leaverequest/**/status").hasRole("ADMIN")
+						.requestMatchers(HttpMethod.POST, "/shift/add").hasRole("ADMIN").requestMatchers("/employee/**")
+						.hasRole("ADMIN").requestMatchers(HttpMethod.PUT, "/swap/**/status").hasRole("ADMIN")
+						.anyRequest().authenticated())
+				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+				.logout(logout->logout.disable())
+				.formLogin(form -> form.disable());
 
-        return http.build();
-    }
+		http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
-    @Bean
-    AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
-    }
+		return http.build();
+	}
 
-    @Bean
-    DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(employeeDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder());
-        return authProvider;
-    }
+	@Bean
+	AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+		return config.getAuthenticationManager();
+	}
 
-    @Bean
-    PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+	@Bean
+	DaoAuthenticationProvider authenticationProvider() {
+		DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+		provider.setUserDetailsService(employeeDetailsService);
+		provider.setPasswordEncoder(passwordEncoder());
+		return provider;
+	}
+
+	@Bean
+	PasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder();
+	}
 }
-
-
