@@ -32,4 +32,6 @@ public class EmployeeDTO {
 	@NotNull(message = "Hire date is required")
 	private Date hireDate;
 	
+	@NotNull(message = "Password is required")
+	private String password;
 }

@@ -34,6 +34,8 @@ public class Employee {
 	private String email;
 	private String department;
 	private String jobTitle;
+	
+	private String password;
 
 	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Attendance> attendances;

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.leave.lams.dto.EmployeeDTO;
@@ -43,6 +44,7 @@ public class EmployeeDAO implements EmployeeService {
 	@Transactional
 	public EmployeeDTO addEmployee(EmployeeDTO employeeDto) {
 		Employee employee = mapper.toEntity(employeeDto);
+		employee.setPassword(new BCryptPasswordEncoder().encode(employee.getPassword()));
         Employee savedEmployee = employeeRepository.save(employee);
         return mapper.toDTo(savedEmployee);
 	}
