@@ -15,6 +15,24 @@ public class LamsApplication {
 
 /*	API documentation
  * 
+ AUTH
+ 
+ To login as Admin
+ [POST] -> localhost:8080/login?user=admin
+ x-www-url :
+ username : root@gmail.com
+ password : root
+ 
+ To login as Employee
+ [POST] -> localhost:8080/login?user=employee
+  x-www-url :
+ username : devans@gmail.com
+ password : user
+ 
+ 
+ to logout
+ [POST] -> localhost:8080/logout
+ 
  
  /health -> to check health -> app is working or not
  /addCustomer -> to insert customer in DB -> DB is working or not and all proper connection happened or not
