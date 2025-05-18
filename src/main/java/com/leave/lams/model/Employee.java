@@ -3,6 +3,8 @@ package com.leave.lams.model;
 import java.util.Date;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -51,5 +53,13 @@ public class Employee {
 
 	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Report> reports;
+	
+	@OneToMany(mappedBy = "fromEmployee", cascade = CascadeType.ALL, orphanRemoval = true)
+	@JsonIgnore
+	private List<ShiftSwapRequest> sentSwapRequests;
+	
+	@OneToMany(mappedBy = "toEmployee", cascade = CascadeType.ALL, orphanRemoval = true)
+	@JsonIgnore
+	private List<ShiftSwapRequest> recievedSwapRequests;
 
 }

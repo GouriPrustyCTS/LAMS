@@ -56,6 +56,7 @@ public class EmployeeDAO implements EmployeeService {
  
         Employee updatedEmployee = mapper.toEntity(employeeDto);
         updatedEmployee.setEmployeeId(id); // Ensure correct ID is retained
+        updatedEmployee.setPassword(new BCryptPasswordEncoder().encode(updatedEmployee.getPassword()));
         updatedEmployee = employeeRepository.save(updatedEmployee);
  
         return mapper.toDTo(updatedEmployee);
