@@ -17,8 +17,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import com.leave.lams.service.EmployeeDetailsService;
 import com.leave.lams.util.JwtAuthenticationFilter;
 
-import jakarta.persistence.criteria.From;
-
 @Configuration
 public class SecurityConfig {
 	@Autowired
