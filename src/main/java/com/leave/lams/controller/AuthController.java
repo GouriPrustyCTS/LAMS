@@ -17,53 +17,53 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.leave.lams.model.AuthRequest;
 import com.leave.lams.service.EmployeeDetailsService;
+import com.leave.lams.service.TokenBlacklistService;
 import com.leave.lams.util.JwtUtil;
 
 import jakarta.servlet.http.HttpServletRequest;
+
 @RestController
 public class AuthController {
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
+	@Autowired
+	private AuthenticationManager authenticationManager;
 
-    @Autowired
-    private EmployeeDetailsService userDetailsService;
+	@Autowired
+	private EmployeeDetailsService userDetailsService;
 
-    @Autowired
-    private JwtUtil jwtUtil;
-    
-    private static final Logger logger = LoggerFactory.getLogger(ReportController.class);
+	@Autowired
+	private JwtUtil jwtUtil;
 
-    @PostMapping("/login")
-    public ResponseEntity<?> authenticate(@RequestBody AuthRequest request) {
-    	logger.info("Request received: POST /login");
-        try {
-            authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
-            );
-        } catch (AuthenticationException ex) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
-        }
+	@Autowired
+	private TokenBlacklistService blacklistService;
 
-        final UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
-        final String token = jwtUtil.generateToken(userDetails);
+	private static final Logger logger = LoggerFactory.getLogger(ReportController.class);
 
-        return ResponseEntity.ok(Collections.singletonMap("token", token));
-    }
-    
-    @PostMapping("/logout")
-    public ResponseEntity<String> logout(HttpServletRequest request) {
-        // Optional: Log the token for blacklisting or auditing
-    	logger.info("Request received: POST /logout");
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            // You can add this token to a blacklist if needed
-            System.out.println("Token to be invalidated: " + token);
-        }
-        return ResponseEntity.ok("Logged out successfully. Please delete token on client side.");
-    }
+	@PostMapping("/login")
+	public ResponseEntity<?> authenticate(@RequestBody AuthRequest request) {
+		logger.info("Request received: POST /login");
+		try {
+			authenticationManager.authenticate(
+					new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+		} catch (AuthenticationException ex) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+		}
+
+		final UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
+		final String token = jwtUtil.generateToken(userDetails);
+
+		return ResponseEntity.ok(Collections.singletonMap("token", token));
+	}
+
+	@PostMapping("/logout")
+	public ResponseEntity<String> logout(HttpServletRequest request) {
+		String authHeader = request.getHeader("Authorization");
+		if (authHeader != null && authHeader.startsWith("Bearer ")) {
+			String token = authHeader.substring(7);
+			blacklistService.blacklistToken(token);
+			logger.info("Token blacklisted: {}", token);
+		}
+		return ResponseEntity.ok("Logged out successfully. Token invalidated.");
+	}
 
 }
-
-
