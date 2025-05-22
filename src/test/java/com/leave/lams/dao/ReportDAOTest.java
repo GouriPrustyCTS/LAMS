@@ -1,144 +1,117 @@
 package com.leave.lams.dao;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+import com.leave.lams.dto.ReportDTO;
+import com.leave.lams.mapper.ReportMapper;
+import com.leave.lams.model.Report;
+import com.leave.lams.repository.ReportRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.leave.lams.model.Employee;
-import com.leave.lams.model.Report;
-import com.leave.lams.repository.ReportRepository;
-
+@ExtendWith(MockitoExtension.class)
 public class ReportDAOTest {
 
     @InjectMocks
-    private ReportDAO reportDAO;
+    private ReportDAO reportService;
 
     @Mock
     private ReportRepository reportRepository;
 
+    @Mock
+    private ReportMapper reportMapper;
+
+    private ReportDTO dto1, dto2, dto;
+    private Report entity1, entity2, entity, existing;
+
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
-    }
 
-    @Test
-    public void testCreateReport() {
-        Report report = new Report();
-        when(reportRepository.save(report)).thenReturn(report);
+        dto1 = new ReportDTO();
+        dto2 = new ReportDTO();
+        dto = new ReportDTO();
+        entity1 = new Report();
+        entity2 = new Report();
+        entity = new Report();
+        existing = new Report();
 
-        Report result = reportDAO.createReport(report);
-        assertEquals(report, result);
+        dto.setReportId(1L);
+        dto.setTotalAttendance(20);
+        dto.setAbsenteesim(2);
+        dto.setGeneratedDate(LocalDateTime.now());
     }
 
     @Test
     public void testGetAllReports() {
-        List<Report> reports = Arrays.asList(new Report(), new Report());
-        when(reportRepository.findAll()).thenReturn(reports);
+        when(reportRepository.findAll()).thenReturn(Arrays.asList(entity1, entity2));
+        when(reportMapper.toDTo(entity1)).thenReturn(dto1);
+        when(reportMapper.toDTo(entity2)).thenReturn(dto2);
 
-        List<Report> result = reportDAO.getAllReports();
+        List<ReportDTO> result = reportService.getAllReports();
         assertEquals(2, result.size());
     }
 
     @Test
     public void testGetReportById() {
-        Report report = new Report();
-        when(reportRepository.findById(1L)).thenReturn(Optional.of(report));
+        when(reportRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(reportMapper.toDTo(entity)).thenReturn(dto);
 
-        Optional<Report> result = reportDAO.getReportById(1L);
-        assertTrue(result.isPresent());
-        assertEquals(report, result.get());
+        Optional<ReportDTO> result = reportService.getReportById(1L);
+        assertEquals(dto, result);
     }
 
     @Test
-    public void testUpdateReport() throws ParseException {
-        String startDateString = "2023-01-01";
-        String endDateString = "2023-01-01";
-        String generatedDateString = "2023-01-01";
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        Date startDate = dateFormat.parse(startDateString);
-        Date endDate = dateFormat.parse(endDateString);
-        Date generatedDate = dateFormat.parse(generatedDateString);
+    public void testCreateReport() {
+        when(reportMapper.toEntity(dto)).thenReturn(entity);
+        when(reportRepository.save(entity)).thenReturn(entity);
+        when(reportMapper.toDTo(entity)).thenReturn(dto);
 
-        // Convert java.util.Date to LocalDate
-        LocalDate generatedLocalDate = generatedDate.toInstant()
-                                                        .atZone(ZoneId.systemDefault())
-                                                        .toLocalDate();
-
-        // Convert LocalDate to LocalDateTime (assuming you want the start of the day)
-        LocalDateTime generatedLocalDateTime = generatedLocalDate.atStartOfDay();
-
-        Report existingReport = new Report();
-        Employee employee = new Employee();
-        employee.setEmployeeId(1L);
-        existingReport.setEmployee(employee);
-
-        Report updatedReport = new Report();
-        updatedReport.setEmployee(employee);
-        updatedReport.setDateRangeStart(startDate);
-        updatedReport.setDateRangeEnd(endDate);
-        updatedReport.setGeneratedDate(generatedLocalDateTime); // Using LocalDateTime
-        updatedReport.setTotalAttendance(20);
-        updatedReport.setAbsenteesim(2);
-
-        when(reportRepository.findById(1L)).thenReturn(Optional.of(existingReport));
-        when(reportRepository.save(existingReport)).thenReturn(existingReport);
-
-        Report result = reportDAO.updateReport(1L, updatedReport);
-        assertEquals(existingReport, result);
-        assertEquals(updatedReport.getDateRangeStart(), result.getDateRangeStart());
-        assertEquals(updatedReport.getDateRangeEnd(), result.getDateRangeEnd());
-        assertEquals(updatedReport.getGeneratedDate(), result.getGeneratedDate());
-        assertEquals(updatedReport.getTotalAttendance(), result.getTotalAttendance());
-        assertEquals(updatedReport.getAbsenteesim(), result.getAbsenteesim());
+        ReportDTO result = reportService.createReport(dto);
+        assertEquals(dto, result);
     }
-    
+
+    @Test
+    public void testUpdateReport() {
+        Long reportId = 1L;
+        when(reportRepository.findById(reportId)).thenReturn(Optional.of(existing));
+        when(reportMapper.toEntity(dto)).thenReturn(existing);
+        when(reportRepository.save(existing)).thenReturn(existing);
+        when(reportMapper.toDTo(existing)).thenReturn(dto);
+
+        ReportDTO result = reportService.updateReport(reportId, dto);
+        assertEquals(dto, result);
+    }
+
     @Test
     public void testDeleteReport() {
-        doNothing().when(reportRepository).deleteById(1L);
-
-        reportDAO.deleteReport(1L);
-        verify(reportRepository, times(1)).deleteById(1L);
+        Long reportId = 1L;
+        when(reportRepository.existsById(reportId)).thenReturn(true);
+        reportService.deleteReport(reportId);
+        verify(reportRepository, times(1)).deleteById(reportId);
     }
-    
+
     @Test
     public void testUpdateReport_EmployeeMismatch() {
-        Report existing = new Report();
-        Employee emp1 = new Employee();
-        emp1.setEmployeeId(1L);
-        existing.setEmployee(emp1);
-
-        Report updated = new Report();
-        Employee emp2 = new Employee();
-        emp2.setEmployeeId(2L); // mismatch
-        updated.setEmployee(emp2);
-
-        when(reportRepository.findById(1L)).thenReturn(Optional.of(existing));
+        entity.setReportId(1L);
+        when(reportRepository.findById(1L)).thenReturn(Optional.of(entity));
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            reportDAO.updateReport(1L, updated);
+            reportService.updateReport(1L, dto);
         });
 
         assertEquals("Employee ID does not match the owner of this record.", exception.getMessage());
     }
-
 }

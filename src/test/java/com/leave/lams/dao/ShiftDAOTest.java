@@ -1,134 +1,140 @@
 package com.leave.lams.dao;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.ZoneId;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-
+import com.leave.lams.dto.ShiftDTO;
+import com.leave.lams.exception.ShiftNotFoundException;
+import com.leave.lams.mapper.ShiftMapper;
 import com.leave.lams.model.Employee;
 import com.leave.lams.model.Shift;
 import com.leave.lams.repository.ShiftRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.*;
+import java.time.*;
+import java.util.*;
 
-public class ShiftDAOTest {
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-	@InjectMocks
-	private ShiftDAO shiftDAO;
+class ShiftDAOTest {
 
-	@Mock
-	private ShiftRepository shiftRepository;
+    @InjectMocks
+    private ShiftDAO shiftDAO;
 
-	@BeforeEach
-	public void setUp() {
-		MockitoAnnotations.openMocks(this);
-	}
+    @Mock
+    private ShiftRepository shiftRepository;
 
-	@Test
-	public void testCreateShift() {
-		Shift shift = new Shift();
-		when(shiftRepository.save(shift)).thenReturn(shift);
+    @Mock
+    private ShiftMapper shiftMapper;
 
-		Shift result = shiftDAO.createShift(shift);
-		assertEquals(shift, result);
-	}
-
-	@Test
-	public void testGetAllShifts() {
-		List<Shift> shifts = Arrays.asList(new Shift(), new Shift());
-		when(shiftRepository.findAll()).thenReturn(shifts);
-
-		List<Shift> result = shiftDAO.getAllShifts();
-		assertEquals(2, result.size());
-	}
-
-	@Test
-	public void testGetShiftById() {
-		Shift shift = new Shift();
-		when(shiftRepository.findById(1L)).thenReturn(Optional.of(shift));
-
-		Optional<Shift> result = shiftDAO.getShiftById(1L);
-		assertTrue(result.isPresent());
-		assertEquals(shift, result.get());
-	}
-
-	@Test
-    public void testUpdateShift() {
-
-        Shift existingShift = new Shift();
-        Employee employee = new Employee();
-        employee.setEmployeeId(1L);
-        existingShift.setEmployee(employee);
-
-        Shift updatedShift = new Shift();
-        updatedShift.setEmployee(employee);
-
-        // Convert String to LocalDate
-        LocalDate shiftLocalDate = LocalDate.parse("2023-01-01");
-
-        // Convert LocalDate to java.util.Date (setting time to the beginning of the day)
-        Date shiftDate = Date.from(shiftLocalDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-        updatedShift.setShiftDate(shiftDate);
-
-        // Convert String to LocalTime
-        LocalTime shiftStartTime = LocalTime.parse("09:00");
-        updatedShift.setShiftStartTime(shiftStartTime);
-
-        // Convert String to LocalTime
-        LocalTime shiftEndTime = LocalTime.parse("17:00");
-        updatedShift.setShiftEndTime(shiftEndTime);
-
-        when(shiftRepository.findById(1L)).thenReturn(Optional.of(existingShift));
-        when(shiftRepository.save(existingShift)).thenReturn(existingShift);
-
-        Shift result = shiftDAO.updateShift(1L, updatedShift);
-        assertEquals(existingShift, result);
-        assertEquals(updatedShift.getShiftDate(), result.getShiftDate());
-        assertEquals(updatedShift.getShiftStartTime(), result.getShiftStartTime());
-        assertEquals(updatedShift.getShiftEndTime(), result.getShiftEndTime());
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
-	@Test
-	public void testDeleteShift() {
-		doNothing().when(shiftRepository).deleteById(1L);
 
-		shiftDAO.deleteShift(1L);
-		verify(shiftRepository, times(1)).deleteById(1L);
-	}
-	
-	@Test
-	public void testUpdateShift_EmployeeMismatch() {
-	    Shift existingShift = new Shift();
-	    Employee emp1 = new Employee();
-	    emp1.setEmployeeId(1L);
-	    existingShift.setEmployee(emp1);
+    private ShiftDTO createSampleShiftDTO() {
+        ShiftDTO dto = new ShiftDTO();
+        dto.setShiftDate(Date.from(LocalDate.now().plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant()));
+        dto.setShiftStartTime(LocalTime.of(9, 0));
+        dto.setShiftEndTime(LocalTime.of(17, 0));
+        dto.setEmployeeId(1L);
+        return dto;
+    }
 
-	    Shift updatedShift = new Shift();
-	    Employee emp2 = new Employee();
-	    emp2.setEmployeeId(2L); // mismatched employee ID
-	    updatedShift.setEmployee(emp2);
+    private Shift createSampleShift() {
+        Shift shift = new Shift();
+        shift.setShiftDate(Date.from(LocalDate.now().plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant()));
+        shift.setShiftStartTime(LocalTime.of(9, 0));
+        shift.setShiftEndTime(LocalTime.of(17, 0));
+        Employee emp = new Employee();
+        emp.setEmployeeId(1L);
+        shift.setEmployee(emp);
+        return shift;
+    }
 
-	    when(shiftRepository.findById(1L)).thenReturn(Optional.of(existingShift));
+    @Test
+    void testCreateShift_Success() {
+        ShiftDTO dto = createSampleShiftDTO();
+        Shift shift = createSampleShift();
 
-	    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-	        shiftDAO.updateShift(1L, updatedShift);
-	    });
+        when(shiftMapper.toEntity(dto)).thenReturn(shift);
+        when(shiftRepository.save(shift)).thenReturn(shift);
+        when(shiftMapper.toDTo(shift)).thenReturn(dto);
 
-	    assertEquals("Employee ID does not match the owner of this record.", exception.getMessage());
-	}
+        ShiftDTO result = shiftDAO.createShift(dto);
+        assertNotNull(result);
+        verify(shiftRepository).save(shift);
+    }
 
+    @Test
+    void testCreateShift_PastDateTime_ThrowsException() {
+        ShiftDTO dto = createSampleShiftDTO();
+        dto.setShiftDate(Date.from(LocalDate.now().minusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant()));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> shiftDAO.createShift(dto));
+        assertEquals("Shift date and time must not be less than the current date and time.", exception.getMessage());
+    }
+
+    @Test
+    void testGetAllShifts() {
+        List<Shift> shifts = List.of(createSampleShift());
+        when(shiftRepository.findAll()).thenReturn(shifts);
+        when(shiftMapper.toDTo(any())).thenReturn(createSampleShiftDTO());
+
+        List<ShiftDTO> result = shiftDAO.getAllShifts();
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    void testGetShiftById_Found() {
+        Shift shift = createSampleShift();
+        when(shiftRepository.findById(1L)).thenReturn(Optional.of(shift));
+        when(shiftMapper.toDTo(shift)).thenReturn(createSampleShiftDTO());
+
+        Optional<ShiftDTO> result = shiftDAO.getShiftById(1L);
+        assertTrue(result.isPresent());
+    }
+
+    @Test
+    void testGetShiftById_NotFound() {
+        when(shiftRepository.findById(1L)).thenReturn(Optional.empty());
+        assertThrows(ShiftNotFoundException.class, () -> shiftDAO.getShiftById(1L));
+    }
+
+    @Test
+    void testUpdateShift_Success() {
+        Shift existing = createSampleShift();
+        ShiftDTO dto = createSampleShiftDTO();
+
+        when(shiftRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(shiftRepository.save(any())).thenReturn(existing);
+        when(shiftMapper.toDTo(existing)).thenReturn(dto);
+
+        ShiftDTO result = shiftDAO.updateShift(1L, dto);
+        assertNotNull(result);
+    }
+
+    @Test
+    void testUpdateShift_EmployeeMismatch() {
+        Shift existing = createSampleShift();
+        ShiftDTO dto = createSampleShiftDTO();
+        dto.setEmployeeId(999L); // Mismatched ID
+
+        when(shiftRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        assertThrows(IllegalArgumentException.class, () -> shiftDAO.updateShift(1L, dto));
+    }
+
+    @Test
+    void testDeleteShift_Success() {
+        when(shiftRepository.existsById(1L)).thenReturn(true);
+        doNothing().when(shiftRepository).deleteById(1L);
+
+        assertDoesNotThrow(() -> shiftDAO.deleteShift(1L));
+    }
+
+    @Test
+    void testDeleteShift_NotFound() {
+        when(shiftRepository.existsById(1L)).thenReturn(false);
+        assertThrows(ShiftNotFoundException.class, () -> shiftDAO.deleteShift(1L));
+    }
 }

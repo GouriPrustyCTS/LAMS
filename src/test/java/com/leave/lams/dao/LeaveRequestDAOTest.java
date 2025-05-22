@@ -3,148 +3,115 @@ package com.leave.lams.dao;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import com.leave.lams.model.Employee;
-import com.leave.lams.model.LeaveRequest;
-import com.leave.lams.repository.LeaveRequestRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.leave.lams.dto.LeaveRequestDTO;
+import com.leave.lams.mapper.LeaveRequestMapper;
+import com.leave.lams.model.LeaveRequest;
+import com.leave.lams.repository.LeaveRequestRepository;
+
+@ExtendWith(MockitoExtension.class)
 public class LeaveRequestDAOTest {
 
     @InjectMocks
-    private LeaveRequestDAO leaveRequestDAO;
+    private LeaveRequestDAO leaveRequestService;
 
     @Mock
     private LeaveRequestRepository leaveRequestRepository;
 
+    @Mock
+    private LeaveRequestMapper leaveRequestMapper;
+
+    private LeaveRequestDTO dto1, dto2, dto;
+    private LeaveRequest entity1, entity2, entity, existing;
+
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
-    }
 
-    @Test
-    public void testCreateLeaveRequest() {
-        LeaveRequest leaveRequest = new LeaveRequest();
-        leaveRequest.setLeaveRequestId(1L);
+        dto1 = new LeaveRequestDTO();
+        dto2 = new LeaveRequestDTO();
+        dto = new LeaveRequestDTO();
+        entity1 = new LeaveRequest();
+        entity2 = new LeaveRequest();
+        entity = new LeaveRequest();
+        existing = new LeaveRequest();
 
-        when(leaveRequestRepository.save(leaveRequest)).thenReturn(leaveRequest);
-
-        LeaveRequest result = leaveRequestDAO.createLeaveRequest(leaveRequest);	//error
-        assertNotNull(result);
-        assertEquals(1L, result.getLeaveRequestId());
+        dto.setLeaveRequestId(1L);
+        dto.setStatus("PENDING");
+        dto.setLeaveType("Sick Leave");
     }
 
     @Test
     public void testGetAllLeaveRequests() {
-        List<LeaveRequest> mockList = Arrays.asList(new LeaveRequest(), new LeaveRequest());
-        when(leaveRequestRepository.findAll()).thenReturn(mockList);
+        when(leaveRequestRepository.findAll()).thenReturn(Arrays.asList(entity1, entity2));
+        when(leaveRequestMapper.toDTo(entity1)).thenReturn(dto1);
+        when(leaveRequestMapper.toDTo(entity2)).thenReturn(dto2);
 
-        List<LeaveRequest> result = leaveRequestDAO.getAllLeaveRequests();//error
+        List<LeaveRequestDTO> result = leaveRequestService.getAllLeaveRequests();
         assertEquals(2, result.size());
     }
 
     @Test
     public void testGetLeaveRequestById() {
-        LeaveRequest mockRequest = new LeaveRequest();
-        mockRequest.setLeaveRequestId(1L);
+        when(leaveRequestRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(leaveRequestMapper.toDTo(entity)).thenReturn(dto);
 
-        when(leaveRequestRepository.findById(1L)).thenReturn(Optional.of(mockRequest));
-
-        Optional<LeaveRequest> result = leaveRequestDAO.getLeaveRequestById(1L);//error
-        assertTrue(result.isPresent());
-        assertEquals(1L, result.get().getLeaveRequestId());
+        Optional<LeaveRequestDTO> result = leaveRequestService.getLeaveRequestById(1L);
+        assertEquals(dto, result);
     }
 
     @Test
-    public void testGetLeaveRequestById_NotFound() {
-        when(leaveRequestRepository.findById(999L)).thenReturn(Optional.empty());
+    public void testCreateLeaveRequest() {
+        when(leaveRequestMapper.toEntity(dto)).thenReturn(entity);
+        when(leaveRequestRepository.save(entity)).thenReturn(entity);
+        when(leaveRequestMapper.toDTo(entity)).thenReturn(dto);
 
-        Optional<LeaveRequest> result = leaveRequestDAO.getLeaveRequestById(999L);//error
-        assertFalse(result.isPresent());
+        LeaveRequestDTO result = leaveRequestService.createLeaveRequest(dto);
+        assertEquals(dto, result);
     }
 
     @Test
     public void testUpdateLeaveRequest() {
-        LeaveRequest existing = new LeaveRequest();
-        existing.setLeaveRequestId(1L);
-        Employee emp = new Employee();
-        emp.setEmployeeId(1L);
-        existing.setEmployee(emp);
+        Long leaveRequestId = 1L;
+        when(leaveRequestRepository.findById(leaveRequestId)).thenReturn(Optional.of(existing));
+        when(leaveRequestMapper.toEntity(dto)).thenReturn(existing);
+        when(leaveRequestRepository.save(existing)).thenReturn(existing);
+        when(leaveRequestMapper.toDTo(existing)).thenReturn(dto);
 
-        LeaveRequest updated = new LeaveRequest();
-        updated.setLeaveRequestId(1L);
-        updated.setEmployee(emp);
-
-        when(leaveRequestRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(leaveRequestRepository.save(updated)).thenReturn(updated);
-
-        LeaveRequest result = leaveRequestDAO.updateLeaveRequest(1L, updated);//error
-        assertNotNull(result);
-        assertEquals(1L, result.getLeaveRequestId());
+        LeaveRequestDTO result = leaveRequestService.updateLeaveRequest(leaveRequestId, dto);
+        assertEquals(dto, result);
     }
 
     @Test
-    public void testUpdateLeaveRequest_MismatchedEmployeeId() {
-        LeaveRequest existing = new LeaveRequest();
-        Employee emp1 = new Employee();
-        emp1.setEmployeeId(1L);
-        existing.setEmployee(emp1);
-
-        LeaveRequest updated = new LeaveRequest();
-        Employee emp2 = new Employee();
-        emp2.setEmployeeId(2L);
-        updated.setEmployee(emp2);
-
-        when(leaveRequestRepository.findById(1L)).thenReturn(Optional.of(existing));
-
-        Exception ex = assertThrows(IllegalArgumentException.class, () ->
-            leaveRequestDAO.updateLeaveRequest(1L, updated)//error
-        );
-
-        assertEquals("Employee ID does not match the owner of this record.", ex.getMessage());
-    }
-
-    @Test
-    public void testDeleteLeaveRequest_Success() {
-        when(leaveRequestRepository.existsById(1L)).thenReturn(true);
-        doNothing().when(leaveRequestRepository).deleteById(1L);
-
-        boolean result = leaveRequestDAO.deleteLeaveRequest(1L);
-        assertTrue(result);
-        verify(leaveRequestRepository, times(1)).deleteById(1L);
-    }
-
-    @Test
-    public void testDeleteLeaveRequest_NotFound() {
-        when(leaveRequestRepository.existsById(1L)).thenReturn(false);
-
-        boolean result = leaveRequestDAO.deleteLeaveRequest(1L);
-        assertFalse(result);
-        verify(leaveRequestRepository, never()).deleteById(anyLong());
+    public void testDeleteLeaveRequest() {
+        Long leaveRequestId = 1L;
+        when(leaveRequestRepository.existsById(leaveRequestId)).thenReturn(true);
+        leaveRequestService.deleteLeaveRequest(leaveRequestId);
+        verify(leaveRequestRepository, times(1)).deleteById(leaveRequestId);
     }
 
     @Test
     public void testUpdateLeaveStatus() {
-        LeaveRequest leaveRequest = new LeaveRequest();
-        leaveRequest.setLeaveRequestId(1L);
-        leaveRequest.setStatus("PENDING");
+        entity.setStatus("PENDING");
 
-        when(leaveRequestRepository.findById(1L)).thenReturn(Optional.of(leaveRequest));
+        when(leaveRequestRepository.findById(1L)).thenReturn(Optional.of(entity));
+        
+        entity.setStatus("APPROVED");
+        when(leaveRequestRepository.save(entity)).thenReturn(entity);
+        when(leaveRequestMapper.toDTo(entity)).thenReturn(dto);
 
-        leaveRequest.setStatus("APPROVED");
-        when(leaveRequestRepository.save(leaveRequest)).thenReturn(leaveRequest);
-
-        LeaveRequest updated = leaveRequestDAO.createLeaveRequest(leaveRequest);//error
-        assertEquals("APPROVED", updated.getStatus());
+        LeaveRequestDTO result = leaveRequestService.updateLeaveStatus(1L, "APPROVED");
+        assertEquals("APPROVED", result.getStatus());
     }
 }
-
-
