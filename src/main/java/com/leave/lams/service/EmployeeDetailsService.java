@@ -14,7 +14,7 @@ import com.leave.lams.model.Employee;
 import com.leave.lams.repository.EmployeeRepository;
 
 @Service
-public class EmployeeDetailsService implements UserDetailsService {
+public class EmployeeDetailsService implements UserDetailsService {	// implement the creation of UserDetails by overriding loadbyUsername
 
     @Autowired
     private EmployeeRepository employeeRepo;

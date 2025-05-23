@@ -17,7 +17,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 @Component
-public class JwtAuthenticationFilter extends OncePerRequestFilter {
+public class JwtAuthenticationFilter extends OncePerRequestFilter {	//  is an abstract base class provided by Spring Framework, that ensures a filter(write down our own filter) is executed only once per request to the application.
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -25,7 +25,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     private EmployeeDetailsService employeeDetailsService;
 
-    @Override
+    @Override	// and we write logic to filter the request
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain)

@@ -19,6 +19,7 @@ import com.leave.lams.util.JwtAuthenticationFilter;
 
 @Configuration
 public class SecurityConfig {
+	
 	@Autowired
 	private JwtAuthenticationFilter jwtFilter;
 
@@ -27,28 +28,29 @@ public class SecurityConfig {
 
 	@Bean
 	SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-		http.csrf(csrf -> csrf.disable())
+		http.csrf(csrf -> csrf.disable())	// so that csrf token is not generated
 				.authorizeHttpRequests(auth -> auth.requestMatchers("/login", "/register").permitAll()
 						.requestMatchers(HttpMethod.PATCH, "/leaverequest/**/status").hasRole("ADMIN")
-						.requestMatchers(HttpMethod.POST, "/shift/add").hasRole("ADMIN").requestMatchers("/employee/**")
-						.hasRole("ADMIN").requestMatchers(HttpMethod.PUT, "/swap/**/status").hasRole("ADMIN")
+						.requestMatchers(HttpMethod.POST, "/shift/add").hasRole("ADMIN")
+						.requestMatchers("/employee/**").hasRole("ADMIN")
+						.requestMatchers(HttpMethod.PUT, "/swap/**/status").hasRole("ADMIN")
 						.anyRequest().authenticated())
-				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-				.logout(logout->logout.disable())
+				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))	// setting session as stateless as we use jwt
+				.logout(logout->logout.disable())	// default login form and logout form
 				.formLogin(form -> form.disable());
 
-		http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+		http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);	// adding jwtFilter before callling the USerName.. Auth..Filter so that if jwt is valid so no need to check user and password
 
 		return http.build();
 	}
 
 	@Bean
 	AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-		return config.getAuthenticationManager();
+		return config.getAuthenticationManager();	// setting auth manager which handles the auth req
 	}
 
 	@Bean
-	DaoAuthenticationProvider authenticationProvider() {
+	DaoAuthenticationProvider authenticationProvider() {	// setting the auth provider as we use DB to store UserDetails so DaoAuthProvider
 		DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
 		provider.setUserDetailsService(employeeDetailsService);
 		provider.setPasswordEncoder(passwordEncoder());

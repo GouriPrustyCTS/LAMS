@@ -34,9 +34,13 @@ public class JwtUtil {
 	}
 
 	public String generateToken(UserDetails userDetails) {
-		return Jwts.builder().setSubject(userDetails.getUsername()).claim("roles", userDetails.getAuthorities())
-				.setIssuedAt(new Date()).setExpiration(new Date(System.currentTimeMillis() + 5 * 60 * 1000)) // 5 min
-				.signWith(key).compact();
+		return Jwts.builder()
+				.setSubject(userDetails.getUsername())	// sets the subject claim as username(which is unique)
+				.claim("roles", userDetails.getAuthorities())	// adding a claim named "roles".
+				.setIssuedAt(new Date())
+				.setExpiration(new Date(System.currentTimeMillis() + 5 * 60 * 1000)) // 5 min
+				.signWith(key)
+				.compact();
 	}
 
 	private boolean isTokenExpired(String token) {
@@ -44,7 +48,11 @@ public class JwtUtil {
 	}
 
 	private Claims getClaims(String token) {
-		return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
+	    return Jwts.parserBuilder() // Step 1: Start building a JWT parser
+	            .setSigningKey(key) // Step 2: Provide the signing key used to sign the JWT
+	            .build()            // Step 3: Build the parser instance
+	            .parseClaimsJws(token) // Step 4: Parse the JWT and verify its signature (JWS)
+	            .getBody();         // Step 5: Extract the Claims (payload) from the verified JWT
 	}
 
 }
