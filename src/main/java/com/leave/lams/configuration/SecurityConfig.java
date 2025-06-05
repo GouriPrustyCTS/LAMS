@@ -30,10 +30,25 @@ public class SecurityConfig {
 	SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http.csrf(csrf -> csrf.disable())	// so that csrf token is not generated
 				.authorizeHttpRequests(auth -> auth.requestMatchers("/login", "/register").permitAll()
-						.requestMatchers(HttpMethod.PATCH, "/leaverequest/**/status").hasRole("ADMIN")
-						.requestMatchers(HttpMethod.POST, "/shift/add").hasRole("ADMIN")
-						.requestMatchers("/employee/**").hasRole("ADMIN")
-						.requestMatchers(HttpMethod.PUT, "/swap/**/status").hasRole("ADMIN")
+						.requestMatchers("/login", "/register").permitAll()
+				        .requestMatchers(HttpMethod.PATCH, "/leaverequest/{id}/status").hasRole("ADMIN") // Corrected
+				        .requestMatchers(HttpMethod.POST, "/shift/add").hasRole("ADMIN")
+				        .requestMatchers("/employee/**").hasRole("ADMIN")
+				        .requestMatchers(HttpMethod.PUT, "/swap/{id}/status").hasRole("ADMIN") // Corrected
+				        .requestMatchers(HttpMethod.PUT, "/leaveBalances/*").hasRole("ADMIN") // This is fine for single segment
+				        .requestMatchers(HttpMethod.PUT, "/leaveBalances/employee/*").hasRole("ADMIN") // This is fine for single segment
+				        .requestMatchers("/attendance/add", "/attendance/{id}").hasRole("ADMIN") // This is fine
+				        .requestMatchers(HttpMethod.GET,"/attendance/emp/my-attendance").hasRole("EMPLOYEE") // This is fine
+//						
+//						.requestMatchers(HttpMethod.PATCH, "/leaverequest/**/status").hasRole("ADMIN")
+//						.requestMatchers(HttpMethod.POST, "/shift/add").hasRole("ADMIN")
+//						.requestMatchers("/employee/**").hasRole("ADMIN")
+//						.requestMatchers(HttpMethod.PUT, "/swap/**/status").hasRole("ADMIN")
+//						.requestMatchers(HttpMethod.PUT, "/leaveBalances/*").hasRole("ADMIN")
+//						.requestMatchers(HttpMethod.PUT, "/leaveBalances/employee/*").hasRole("ADMIN")
+//						.requestMatchers("/attendance/add", "/attendance/{id}").hasRole("ADMIN")
+//						.requestMatchers(HttpMethod.GET,"/attendance/emp/my-attendance").hasRole("EMPLOYEE")
+//						
 						.anyRequest().authenticated())
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))	// setting session as stateless as we use jwt
 				.logout(logout->logout.disable())	// default login form and logout form

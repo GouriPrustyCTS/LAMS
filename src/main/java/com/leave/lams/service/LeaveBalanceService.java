@@ -12,8 +12,10 @@ public interface LeaveBalanceService {
     public List<LeaveBalanceDTO> getAllLeaveBalances() ;
 
     public Optional<LeaveBalanceDTO> getLeaveBalanceById(Long employeeID) ;
-    
-    public LeaveBalanceDTO updateLeaveBalance(Long id, LeaveBalanceDTO leaveBalance);
-    
+    public LeaveBalanceDTO updateLeaveBalanceByLeaveId(Long leaveId, LeaveBalanceDTO leaveBalance);
+
+    public List<LeaveBalanceDTO> updateLeaveBalancesByEmployeeId(Long employeeId, LeaveBalanceDTO leaveBalance);
     public void deleteLeaveBalance(Long id);
+
+    public boolean checkEmployeeExists(Long employeeId);
 }
