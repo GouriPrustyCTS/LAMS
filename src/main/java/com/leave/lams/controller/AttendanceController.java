@@ -27,9 +27,9 @@ public class AttendanceController {
 
 	private static final Logger logger = LoggerFactory.getLogger(AttendanceController.class);
 
-	@Autowired
+	@Autowired 
 	private AttendanceDAO attendanceService;
-
+ 
 	@GetMapping("/")
 	public List<AttendanceDTO> getAllAttendances() {
 		logger.info("Request received: GET /attendance/");
