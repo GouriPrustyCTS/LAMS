@@ -17,5 +17,5 @@ public interface LeaveBalanceRepository extends JpaRepository<LeaveBalance, Long
     public boolean existsByEmployee_EmployeeId(Long employeeId);
 //	
 
-	List<LeaveBalance> findAllByEmployee_EmployeeId(Long employeeId);
+    Optional<List<LeaveBalance>> findAllByEmployee_EmployeeId(Long employeeId);
 }

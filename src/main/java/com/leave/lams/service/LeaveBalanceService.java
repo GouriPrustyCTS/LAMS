@@ -18,4 +18,6 @@ public interface LeaveBalanceService {
     public void deleteLeaveBalance(Long id);
 
     public boolean checkEmployeeExists(Long employeeId);
+
+    public Optional<List<LeaveBalanceDTO>> getLeaveBalancesByEmployeeId(Long employeeId);
 }

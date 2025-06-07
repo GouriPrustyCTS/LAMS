@@ -1,5 +1,6 @@
 package com.leave.lams.controller;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -30,6 +31,7 @@ public class LeaveBalanceController {
 	@Autowired
 	private LeaveBalanceService leaveBalanceService;
 
+	
 	@PostMapping("/add")
 	public LeaveBalanceDTO createLeaveBalance(@Valid @RequestBody LeaveBalanceDTO leaveBalance) {
 		logger.info("Request received: POST /leaveBalances/add - Request Body: {}", leaveBalance);
@@ -38,6 +40,7 @@ public class LeaveBalanceController {
 		return createdLeaveBalance;
 	}
 
+	
 	@GetMapping("/")
 	public List<LeaveBalanceDTO> getAllLeaveBalances() {
 		logger.info("Request received: GET /leaveBalances/");
@@ -56,6 +59,17 @@ public class LeaveBalanceController {
 				});
 		logger.info("Response sent: GET /leaveBalances/{}", leaveBalanceID);
 		return response;
+	}
+	
+	@GetMapping("/employee/{employeeId}")
+	public List<LeaveBalanceDTO> getLeaveBalancesByEmployeeId(@PathVariable Long employeeId) {
+	    logger.info("Request received: GET /leaveBalances/{}", employeeId);
+
+	    List<LeaveBalanceDTO> leaveBalances = leaveBalanceService.getLeaveBalancesByEmployeeId(employeeId)
+	        .orElse(Collections.emptyList()); 
+
+	    logger.info("Response sent: GET /leaveBalances/{} - Retrieved {} leave balances", employeeId, leaveBalances.size());
+	    return leaveBalances;
 	}
 
     @PutMapping("/{id}")

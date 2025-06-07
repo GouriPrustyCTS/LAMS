@@ -25,6 +25,7 @@ public class LeaveBalanceDAO implements LeaveBalanceService {
 	@Autowired
 	private LeaveBalanceMapper mapper;
 
+	@Transactional
 	public LeaveBalanceDTO createLeaveBalance(LeaveBalanceDTO leaveBalance) {
 		LeaveBalance leave = mapper.toEntity(leaveBalance);
 		LeaveBalance savedLeave = leaveBalanceRepository.save(leave);
@@ -57,21 +58,22 @@ public class LeaveBalanceDAO implements LeaveBalanceService {
     @Override
     @Transactional
     public List<LeaveBalanceDTO> updateLeaveBalancesByEmployeeId(Long employeeId, LeaveBalanceDTO leaveBalance) {
-        List<LeaveBalance> existingLeaveBalances = leaveBalanceRepository.findAllByEmployee_EmployeeId(employeeId);
-        if (existingLeaveBalances.isEmpty()) {
+    	Optional<List<LeaveBalance>> existingLeaveBalances = leaveBalanceRepository.findAllByEmployee_EmployeeId(employeeId);
+        if (existingLeaveBalances.isEmpty() || existingLeaveBalances.get().isEmpty()) {
             throw new LeaveBalanceNotFoundException("No leave balances found for Employee ID: " + employeeId);
         }
     
-        existingLeaveBalances.forEach(existing -> {
-            existing.setLeaveType(leaveBalance.getLeaveType());
-            existing.setBalance(leaveBalance.getBalance());
+        existingLeaveBalances.get().forEach(existing -> {
+        	if(leaveBalance.getLeaveType().equals(existing.getLeaveType())) {
+        		existing.setBalance(leaveBalance.getBalance());
+        	}
         });
     
-        List<LeaveBalance> updatedLeaveBalances = leaveBalanceRepository.saveAll(existingLeaveBalances);
+        List<LeaveBalance> updatedLeaveBalances = leaveBalanceRepository.saveAll(existingLeaveBalances.get());
         return updatedLeaveBalances.stream().map(mapper::toDTo).collect(Collectors.toList());
     }
 
-
+    @Transactional
 	@Override
 	public void deleteLeaveBalance(Long id) {
 		if (!leaveBalanceRepository.existsById(id)) {
@@ -89,6 +91,19 @@ public class LeaveBalanceDAO implements LeaveBalanceService {
 																				// in LeaveBalanceRepository
 	}
 //    
+	
+    @Override
+    public Optional<List<LeaveBalanceDTO>> getLeaveBalancesByEmployeeId(Long employeeId) {
+        Optional<List<LeaveBalance>> optionalLeaveList = leaveBalanceRepository.findAllByEmployee_EmployeeId(employeeId);
+        if (optionalLeaveList.isEmpty() || optionalLeaveList.get().isEmpty()) {
+            return Optional.empty();
+        }
+        List<LeaveBalance> leaveList = optionalLeaveList.get();
+        List<LeaveBalanceDTO> dtoList = leaveList.stream()
+                .map(mapper::toDTo)
+                .collect(Collectors.toList());
+        return Optional.of(dtoList);
+    }
 
 	
 }
