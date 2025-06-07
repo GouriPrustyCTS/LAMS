@@ -23,4 +23,6 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Long
 
 	public List<LeaveRequest> findAll();
 
+	public List<LeaveRequest> findByStatus(String string);
+
 }

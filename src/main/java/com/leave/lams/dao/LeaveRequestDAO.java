@@ -16,6 +16,7 @@ import com.leave.lams.mapper.LeaveRequestMapper;
 import com.leave.lams.model.Employee;
 import com.leave.lams.model.LeaveBalance;
 import com.leave.lams.model.LeaveRequest;
+import com.leave.lams.model.ShiftSwapRequest;
 import com.leave.lams.repository.EmployeeRepository;
 import com.leave.lams.repository.LeaveBalanceRepository;
 import com.leave.lams.repository.LeaveRequestRepository;
@@ -119,4 +120,15 @@ public class LeaveRequestDAO implements LeaveRequestService {
         List<LeaveRequest> employeeLeaves = leaveRequestRepository.findByEmployee_EmployeeId(empId);
         return employeeLeaves.stream().map(mapper::toDTo).collect(Collectors.toList());
     }
+
+
+	@Override
+	public List<LeaveRequestDTO> getPendingRequests() {
+        try {
+            List<LeaveRequest> requests = leaveRequestRepository.findByStatus("PENDING");
+            return requests.stream().map(mapper::toDTo).collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new RuntimeException("Error while fetching pending requests", e);
+        }
+	}
 }

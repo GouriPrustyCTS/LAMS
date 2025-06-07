@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.leave.lams.dto.LeaveRequestDTO;
+import com.leave.lams.dto.ShiftSwapRequestDTO;
 import com.leave.lams.mapper.LeaveRequestMapper;
 import com.leave.lams.model.LeaveRequest;
 import com.leave.lams.repository.LeaveRequestRepository;
@@ -42,6 +43,7 @@ public class LeaveRequestController {
 	@Autowired
 	private LeaveRequestMapper mapper;
 
+//	
 	@PostMapping("/add")
 	public LeaveRequestDTO createLeaveRequest(@Valid @RequestBody LeaveRequestDTO leaveRequest) {
 		logger.info("Request received: POST /leaveRequests/add - Request Body: {}", leaveRequest);
@@ -54,6 +56,7 @@ public class LeaveRequestController {
 		return createdRequest;
 	}
 
+//	
 	@GetMapping("/")
 	public List<LeaveRequestDTO> getAllLeaveRequests() {
 		logger.info("Request received: GET /leaveRequests/");
@@ -62,6 +65,7 @@ public class LeaveRequestController {
 		return leaveRequests;
 	}
 
+//	
 	@GetMapping("/{id}")
 	public ResponseEntity<LeaveRequestDTO> getLeaveRequestById(@PathVariable Long id) {
 		logger.info("Request received: GET /leaveRequests/{}", id);
@@ -74,7 +78,7 @@ public class LeaveRequestController {
 			return ResponseEntity.notFound().build();
 		}
 	}
-
+//
 	@PutMapping("/{id}")
 	public ResponseEntity<LeaveRequestDTO> updateLeaveRequest(@PathVariable Long id,@Valid @RequestBody LeaveRequestDTO updatedRequest) {
 		logger.info("Request received: PUT /leaveRequests/{} - Request Body: {}", id, updatedRequest);
@@ -86,7 +90,7 @@ public class LeaveRequestController {
 		logger.info("Response sent: PUT /leaveRequests/{} - LeaveRequest updated", id);
 		return ResponseEntity.ok(leaveRequest);
 	}
-
+//
 	@DeleteMapping("/{id}")
 	public ResponseEntity<Void> deleteLeaveRequest(@PathVariable Long id) {
 		logger.info("Request received: DELETE /leaveRequests/{}", id);
@@ -99,6 +103,7 @@ public class LeaveRequestController {
 		return ResponseEntity.noContent().build();
 	}
 
+//	
 	@PatchMapping("/{id}/status")
 	public ResponseEntity<LeaveRequestDTO> updateLeaveStatus(@PathVariable Long id,@Valid @RequestBody Map<String, String> body) {
 		logger.info("Request received: PATCH /leaveRequests/{}/status - Request Body: {}", id, body);
@@ -119,6 +124,12 @@ public class LeaveRequestController {
 		logger.info("Response sent: GET /leaveRequests/employee/{} - Retrieved {} leave requests", employeeId, leaveRequests.size());
 		return leaveRequests.stream().map(s -> mapper.toDTo(s)).collect(Collectors.toList());
 	}
+//	
+    @GetMapping("/pending")
+    public List<LeaveRequestDTO> getPendingRequests() {
+        logger.info("GET /leaveRequests/pending - Fetching pending leave requests");
+        return leaveRequestService.getPendingRequests();
+    }
 	
 //	_____________________________________________________________________________________________________________________________________
 	

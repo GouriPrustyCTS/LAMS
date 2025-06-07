@@ -25,7 +25,8 @@ import jakarta.servlet.http.HttpServletRequest;
 @RestController
 public class AuthController {
 
-	@Autowired
+//	Disabled for frontend dev
+//	@Autowired
 	private AuthenticationManager authenticationManager;
 
 	@Autowired

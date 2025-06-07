@@ -17,6 +17,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import com.leave.lams.service.EmployeeDetailsService;
 import com.leave.lams.util.JwtAuthenticationFilter;
 
+/*
 @Configuration
 public class SecurityConfig {
 	
@@ -39,16 +40,6 @@ public class SecurityConfig {
 				        .requestMatchers(HttpMethod.PUT, "/leaveBalances/employee/*").hasRole("ADMIN") // This is fine for single segment
 				        .requestMatchers("/attendance/add", "/attendance/{id}").hasRole("ADMIN") // This is fine
 				        .requestMatchers(HttpMethod.GET,"/attendance/emp/my-attendance").hasRole("EMPLOYEE") // This is fine
-//						
-//						.requestMatchers(HttpMethod.PATCH, "/leaverequest/**/status").hasRole("ADMIN")
-//						.requestMatchers(HttpMethod.POST, "/shift/add").hasRole("ADMIN")
-//						.requestMatchers("/employee/**").hasRole("ADMIN")
-//						.requestMatchers(HttpMethod.PUT, "/swap/**/status").hasRole("ADMIN")
-//						.requestMatchers(HttpMethod.PUT, "/leaveBalances/*").hasRole("ADMIN")
-//						.requestMatchers(HttpMethod.PUT, "/leaveBalances/employee/*").hasRole("ADMIN")
-//						.requestMatchers("/attendance/add", "/attendance/{id}").hasRole("ADMIN")
-//						.requestMatchers(HttpMethod.GET,"/attendance/emp/my-attendance").hasRole("EMPLOYEE")
-//						
 						.anyRequest().authenticated())
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))	// setting session as stateless as we use jwt
 				.logout(logout->logout.disable())	// default login form and logout form
@@ -77,3 +68,25 @@ public class SecurityConfig {
 		return new BCryptPasswordEncoder();
 	}
 }
+
+*/
+
+
+@Configuration
+public class SecurityConfig {
+
+    @Bean
+    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable()) // Disable CSRF
+            .authorizeHttpRequests(auth -> auth
+                .anyRequest().permitAll() // Allow all endpoints
+            )
+            .formLogin(login -> login.disable()) // Disable form login
+            .httpBasic(httpBasic -> httpBasic.disable()) // Disable HTTP Basic auth
+            .logout(logout -> logout.disable()); // Disable logout
+
+        return http.build();
+    }
+}
+

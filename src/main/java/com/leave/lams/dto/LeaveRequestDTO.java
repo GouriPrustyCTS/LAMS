@@ -1,6 +1,7 @@
 package com.leave.lams.dto;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -21,6 +22,9 @@ public class LeaveRequestDTO {
 
 	@NotNull(message = "End date is required")
 	private LocalDate endDate;
+	
+	@NotNull(message = "Request date is required")
+	private LocalDateTime requestDate;
 
 	@NotBlank(message = "Reason is required")
 	private String reason;

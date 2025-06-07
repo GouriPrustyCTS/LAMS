@@ -31,4 +31,6 @@ public interface LeaveRequestService {
 
     public List<LeaveRequestDTO> getLeaveDetailsByEmployee(Long empId);
 
+	public List<LeaveRequestDTO> getPendingRequests();
+
 }
