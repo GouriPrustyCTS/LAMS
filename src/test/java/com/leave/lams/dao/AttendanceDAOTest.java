@@ -1,8 +1,9 @@
 package com.leave.lams.dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -48,11 +49,7 @@ public class AttendanceDAOTest {
     public void setUp() {
         MockitoAnnotations.openMocks(this);
 
-        dto1 = new AttendanceDTO();
-        dto2 = new AttendanceDTO();
         dto = new AttendanceDTO();
-        entity1 = new Attendance();
-        entity2 = new Attendance();
         entity = new Attendance();
         existing = new Attendance();
 
@@ -105,7 +102,7 @@ public class AttendanceDAOTest {
         when(attendanceRepository.save(existing)).thenReturn(existing);
         when(attendanceMapper.toDTo(existing)).thenReturn(dto);
 
-        AttendanceDTO result = attendanceService.updatAttendance(attendanceId, dto);
+        AttendanceDTO result = attendanceService.updateAttendance(attendanceId, dto);
         assertEquals(dto, result);
     }
 

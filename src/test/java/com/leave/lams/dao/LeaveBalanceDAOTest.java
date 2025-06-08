@@ -256,7 +256,7 @@ class LeaveBalanceDAOTest {
     @Test
     void testUpdateLeaveBalancesByEmployeeId_NotFound() {
         Long nonExistentEmployeeId = 999L;
-        when(leaveBalanceRepository.findAllByEmployee_EmployeeId(nonExistentEmployeeId)).thenReturn(Arrays.asList());
+        when(leaveBalanceRepository.findAllByEmployee_EmployeeId(nonExistentEmployeeId)).thenReturn(Optional.empty());
 
         assertThrows(LeaveBalanceNotFoundException.class, () -> leaveBalanceDAO.updateLeaveBalancesByEmployeeId(nonExistentEmployeeId, leaveBalanceDTO));
 

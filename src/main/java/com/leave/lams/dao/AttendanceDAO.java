@@ -133,7 +133,7 @@ public class AttendanceDAO implements AttendanceService {
     }
 
 	@Override
-	public AttendanceDTO updatAttendance(Long id, AttendanceDTO attendanceDto) {
+	public AttendanceDTO updateAttendance(Long id, AttendanceDTO attendanceDto) {
 		Attendance existingAttendance = attendanceRepository.findById(id)
 				.orElseThrow(() -> new AttendanceNotFoundException("Attendance record not found with ID: " + id));
 
