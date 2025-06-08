@@ -9,6 +9,6 @@ public interface ShiftSwapRequestService {
     public ShiftSwapRequestDTO createRequest(ShiftSwapRequestDTO request);
     public List<ShiftSwapRequestDTO> getAllRequests();
     public Optional<ShiftSwapRequestDTO> getRequestById(Long id);
-    public List<ShiftSwapRequestDTO> getPendingRequests();
     public ShiftSwapRequestDTO updateRequestStatus(Long id, String status);
+    public List<ShiftSwapRequestDTO> getRequestsByStatus(String status);
 }

@@ -231,7 +231,7 @@ class LeaveBalanceDAOTest {
         expectedDto2.setBalance(10.0);
         expectedDto2.setEmployeeId(employeeId);
 
-        when(leaveBalanceRepository.findAllByEmployee_EmployeeId(employeeId)).thenReturn(existingList);
+//        when(leaveBalanceRepository.findAllByEmployee_EmployeeId(employeeId)).thenReturn(existingList);
         // saveAll will be called with the modified 'existingList'
         when(leaveBalanceRepository.saveAll(existingList)).thenReturn(Arrays.asList(updatedLb1, updatedLb2));
         when(mapper.toDTo(updatedLb1)).thenReturn(expectedDto1);

@@ -67,18 +67,25 @@ public class ShiftDAO implements ShiftService {
     }
 
     @Override
-    public ShiftDTO updateShift(Long id, ShiftDTO shift) {
+    public ShiftDTO updateShift(Long id, ShiftDTO shiftDto) { // Renamed parameter to shiftDto for clarity
         try {
             Shift existing = shiftRepository.findById(id)
                     .orElseThrow(() -> new ShiftNotFoundException("Shift not found with ID: " + id));
 
-            if (!existing.getEmployee().getEmployeeId().equals(shift.getEmployeeId())) {
-                throw new IllegalArgumentException("Employee ID does not match the owner of this record.");
-            }
+            // Update properties from shiftDto to existing entity
+            existing.setShiftName(shiftDto.getShiftName()); // Ensure shiftName is updated
+            existing.setShiftDate(shiftDto.getShiftDate());
+            existing.setShiftStartTime(shiftDto.getShiftStartTime());
+            existing.setShiftEndTime(shiftDto.getShiftEndTime());
 
-            existing.setShiftDate(shift.getShiftDate());
-            existing.setShiftStartTime(shift.getShiftStartTime());
-            existing.setShiftEndTime(shift.getShiftEndTime());
+            // If employee is part of the update, you'd need to fetch and set the Employee entity
+            // For simplicity, assuming employeeId is just for validation or link, not direct update here
+            // You might need a more robust way to handle updating associated Employee if it's mutable
+            if (!existing.getEmployee().getEmployeeId().equals(shiftDto.getEmployeeId())) {
+                 // You might want to update the employee reference or throw an error
+                 // For now, keeping the validation as is.
+                throw new IllegalArgumentException("Employee ID cannot be changed directly through shift update. Create a new shift if employee needs to change.");
+            }
 
             return mapper.toDTo(shiftRepository.save(existing));
         } catch (ShiftNotFoundException | IllegalArgumentException e) {
@@ -89,7 +96,7 @@ public class ShiftDAO implements ShiftService {
             throw new RuntimeException("Failed to update shift", e);
         }
     }
-
+    
     @Override
     public void deleteShift(Long id) {
         try {

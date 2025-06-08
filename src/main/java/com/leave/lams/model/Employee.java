@@ -24,19 +24,18 @@ import lombok.NoArgsConstructor;
 @Table(name = "employee")
 public class Employee {
 
-
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long employeeId;
 
 	private Date hireDate;
 	private String name;
-	
+
 	@Column(unique = true)
 	private String email;
 	private String department;
 	private String jobTitle;
-	
+
 	private String password;
 
 	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -53,13 +52,38 @@ public class Employee {
 
 	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Report> reports;
-	
+
 	@OneToMany(mappedBy = "fromEmployee", cascade = CascadeType.ALL, orphanRemoval = true)
 	@JsonIgnore
 	private List<ShiftSwapRequest> sentSwapRequests;
-	
+
 	@OneToMany(mappedBy = "toEmployee", cascade = CascadeType.ALL, orphanRemoval = true)
 	@JsonIgnore
 	private List<ShiftSwapRequest> recievedSwapRequests;
+
+	// --- Custom Getters for Frontend Compatibility ---
+
+	// This method will be used by EmployeeController.java to provide the "title"
+	public String getDesignation() {
+		return this.jobTitle;
+	}
+
+	// Assuming you want to expose first and last name for frontend display
+	// If your 'name' field already stores "FirstName LastName", then these might
+	// not be strictly necessary
+	// but are good to have if you later split the name.
+	public String getFirstName() {
+		if (this.name != null && this.name.contains(" ")) {
+			return this.name.substring(0, this.name.indexOf(" "));
+		}
+		return this.name; // Or return null/empty string if no space
+	}
+
+	public String getLastName() {
+		if (this.name != null && this.name.contains(" ")) {
+			return this.name.substring(this.name.indexOf(" ") + 1);
+		}
+		return ""; // Or return null/empty string
+	}
 
 }

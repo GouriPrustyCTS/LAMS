@@ -38,20 +38,23 @@ public class AuthController {
 	@Autowired
 	private TokenBlacklistService blacklistService;
 
-	private static final Logger logger = LoggerFactory.getLogger(ReportController.class);
+	private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
 	@PostMapping("/login")
 	public ResponseEntity<?> authenticate(@RequestBody AuthRequest request) {
-		logger.info("Request received: POST /login");
+		logger.info("Request received: POST /login for user: {}", request.getUsername());
 		try {
 			authenticationManager.authenticate(
 					new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
 		} catch (AuthenticationException ex) {
+			logger.warn("Authentication failed for user {}: {}", request.getUsername(), ex.getMessage());
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
 		}
 
 		final UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
 		final String token = jwtUtil.generateToken(userDetails);
+		
+		logger.info("Login successful for user: {}", request.getUsername());
 
 		return ResponseEntity.ok(Collections.singletonMap("token", token));
 	}

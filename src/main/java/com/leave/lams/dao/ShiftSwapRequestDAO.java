@@ -18,6 +18,7 @@ import com.leave.lams.model.ShiftSwapRequest;
 import com.leave.lams.repository.ShiftRepository;
 import com.leave.lams.repository.ShiftSwapRequestRepository;
 import com.leave.lams.service.ShiftSwapRequestService;
+
 @Service
 public class ShiftSwapRequestDAO implements ShiftSwapRequestService {
 
@@ -35,10 +36,12 @@ public class ShiftSwapRequestDAO implements ShiftSwapRequestService {
     @Override
     public ShiftSwapRequestDTO createRequest(ShiftSwapRequestDTO request) {
         try {
-            request.setStatus("PENDING");
+            if (request.getStatus() == null || request.getStatus().isEmpty()) {
+                request.setStatus("PENDING");
+            }
             ShiftSwapRequest entity = mapper.toEntity(request);
             ShiftSwapRequest saved = shiftSwapRequestRepository.save(entity);
-            return mapper.toDTo(saved);
+            return mapper.toDto(saved);
         } catch (Exception e) {
             logger.error("Failed to create shift swap request: {}", e.getMessage());
             throw new RuntimeException("Error while creating shift swap request", e);
@@ -49,7 +52,7 @@ public class ShiftSwapRequestDAO implements ShiftSwapRequestService {
     public List<ShiftSwapRequestDTO> getAllRequests() {
         try {
             List<ShiftSwapRequest> requests = shiftSwapRequestRepository.findAll();
-            return requests.stream().map(mapper::toDTo).collect(Collectors.toList());
+            return requests.stream().map(mapper::toDto).collect(Collectors.toList());
         } catch (Exception e) {
             logger.error("Failed to fetch all shift swap requests: {}", e.getMessage());
             throw new RuntimeException("Error while fetching shift swap requests", e);
@@ -61,7 +64,7 @@ public class ShiftSwapRequestDAO implements ShiftSwapRequestService {
         try {
             ShiftSwapRequest request = shiftSwapRequestRepository.findById(id)
                 .orElseThrow(() -> new ShiftSwapRequestNotFoundException("Swap request not found with ID: " + id));
-            return Optional.of(mapper.toDTo(request));
+            return Optional.of(mapper.toDto(request));
         } catch (ShiftSwapRequestNotFoundException e) {
             throw e;
         } catch (Exception e) {
@@ -70,14 +73,17 @@ public class ShiftSwapRequestDAO implements ShiftSwapRequestService {
         }
     }
 
+    // REMOVED: getPendingRequests() method. Its functionality is now part of getRequestsByStatus("PENDING")
+
+    // NEW: Implementation for getting requests filtered by status
     @Override
-    public List<ShiftSwapRequestDTO> getPendingRequests() {
+    public List<ShiftSwapRequestDTO> getRequestsByStatus(String status) {
         try {
-            List<ShiftSwapRequest> requests = shiftSwapRequestRepository.findByStatus("PENDING");
-            return requests.stream().map(mapper::toDTo).collect(Collectors.toList());
+            List<ShiftSwapRequest> requests = shiftSwapRequestRepository.findByStatus(status);
+            return requests.stream().map(mapper::toDto).collect(Collectors.toList());
         } catch (Exception e) {
-            logger.error("Error fetching pending shift swap requests: {}", e.getMessage());
-            throw new RuntimeException("Error while fetching pending requests", e);
+            logger.error("Error fetching shift swap requests by status {}: {}", status, e.getMessage());
+            throw new RuntimeException("Error while fetching requests by status", e);
         }
     }
 
@@ -93,17 +99,21 @@ public class ShiftSwapRequestDAO implements ShiftSwapRequestService {
                 Shift shift1 = request.getFromShift();
                 Shift shift2 = request.getToShift();
 
-                // Perform swap
-                Employee temp = shift1.getEmployee();
+                if (shift1 == null || shift2 == null) {
+                    throw new RuntimeException("One or both shifts associated with the swap request are missing. Cannot approve.");
+                }
+
+                // Perform swap logic: exchange employees assigned to the shifts
+                Employee tempEmployee = shift1.getEmployee();
                 shift1.setEmployee(shift2.getEmployee());
-                shift2.setEmployee(temp);
+                shift2.setEmployee(tempEmployee);
 
                 shiftRepository.save(shift1);
                 shiftRepository.save(shift2);
             }
 
             ShiftSwapRequest saved = shiftSwapRequestRepository.save(request);
-            return mapper.toDTo(saved);
+            return mapper.toDto(saved);
 
         } catch (ShiftSwapRequestNotFoundException e) {
             logger.warn("Update failed: {}", e.getMessage());

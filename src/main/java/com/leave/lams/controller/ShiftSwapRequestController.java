@@ -1,24 +1,15 @@
 package com.leave.lams.controller;
 
-import java.util.List;
-
+import com.leave.lams.dto.ShiftSwapRequestDTO;
+import com.leave.lams.service.ShiftSwapRequestService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.leave.lams.dto.ShiftSwapRequestDTO;
-import com.leave.lams.service.ShiftSwapRequestService;
-
+import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/swap")
@@ -37,10 +28,14 @@ public class ShiftSwapRequestController {
         return created;
     }
 
+    // UPDATED: Now accepts an optional 'status' query parameter
     @GetMapping("/")
-    public List<ShiftSwapRequestDTO> getAllRequests() {
-        logger.info("GET /swap/ - Fetching all swap requests");
-        return shiftSwapRequestService.getAllRequests();
+    public List<ShiftSwapRequestDTO> getAllRequests(@RequestParam(required = false) String status) {
+        logger.info("GET /swap/ - Fetching swap requests with status: {}", status != null ? status : "ALL");
+        if (status != null && !status.trim().isEmpty()) {
+            return shiftSwapRequestService.getRequestsByStatus(status); // Delegates to a new method in service
+        }
+        return shiftSwapRequestService.getAllRequests(); // Fetches all if no status specified
     }
 
     @GetMapping("/{id}")
@@ -54,11 +49,9 @@ public class ShiftSwapRequestController {
                 });
     }
 
-    @GetMapping("/pending")
-    public List<ShiftSwapRequestDTO> getPendingRequests() {
-        logger.info("GET /swap/pending - Fetching pending swap requests");
-        return shiftSwapRequestService.getPendingRequests();
-    }
+    // Removed the dedicated @GetMapping("/pending") as it's now handled by @GetMapping("/") with status=PENDING
+    // The previous @GetMapping("/pending") method: getPendingRequests() is no longer directly exposed here.
+    // Its logic will be part of getRequestsByStatus("PENDING") in the service.
 
     @PutMapping("/{id}/status") // swap/{id}/status?status=APPROVED
     public ShiftSwapRequestDTO updateStatus(@PathVariable Long id, @RequestParam String status) {
@@ -66,4 +59,3 @@ public class ShiftSwapRequestController {
         return shiftSwapRequestService.updateRequestStatus(id, status);
     }
 }
-
