@@ -98,18 +98,35 @@ public class SecurityConfig {
 	}
 }
 
-/*
- * 
- * 
- * @Configuration public class SecurityConfig {
- * 
- * @Bean SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
- * http .csrf(csrf -> csrf.disable()) // Disable CSRF
- * .authorizeHttpRequests(auth -> auth .anyRequest().permitAll() // Allow all
- * endpoints ) .formLogin(login -> login.disable()) // Disable form login
- * .httpBasic(httpBasic -> httpBasic.disable()) // Disable HTTP Basic auth
- * .logout(logout -> logout.disable()); // Disable logout
- * 
- * return http.build(); } }
- * 
- */
+/*// for disabling the security use this
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    @Bean
+    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable())
+            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+            .formLogin(login -> login.disable())
+            .httpBasic(httpBasic -> httpBasic.disable())
+            .logout(logout -> logout.disable())
+            .cors(cors -> cors.configurationSource(corsConfigurationSource())); // <-- This line is crucial
+        return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("http://localhost:4200"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*")); // Allows all headers from the client
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+}
+
+*/
