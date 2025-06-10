@@ -38,7 +38,7 @@ public class JwtUtil {
 				.setSubject(userDetails.getUsername())	// sets the subject claim as username(which is unique)
 				.claim("roles", userDetails.getAuthorities())	// adding a claim named "roles".
 				.setIssuedAt(new Date())
-				.setExpiration(new Date(System.currentTimeMillis() + 5 * 60 * 1000)) // 5 min
+				.setExpiration(new Date(System.currentTimeMillis() + 55 * 60 * 1000)) // 5 min
 				.signWith(key)
 				.compact();
 	}

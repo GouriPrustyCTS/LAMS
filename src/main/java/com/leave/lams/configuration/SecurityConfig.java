@@ -27,6 +27,7 @@ import java.util.List;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -97,8 +98,8 @@ public class SecurityConfig {
 		return new BCryptPasswordEncoder();
 	}
 }
-
-/*// for disabling the security use this
+/*
+// for disabling the security use this
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -129,4 +130,4 @@ public class SecurityConfig {
     }
 }
 
-*/
+ */
