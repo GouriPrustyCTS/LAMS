@@ -72,7 +72,7 @@ public ResponseEntity<?> authenticate(@RequestBody AuthRequest request) {
 //    if(employee== null) {
 //    	return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
 //    }
-    return ResponseEntity.ok(new AuthResponse(token, employee.getEmployeeId()));
+    return ResponseEntity.ok(new AuthResponse(token, employeeId));
 }
 
 
