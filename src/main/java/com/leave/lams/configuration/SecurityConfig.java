@@ -67,7 +67,7 @@ public class SecurityConfig {
 
 		configuration.setAllowedOrigins(List.of("http://localhost:4200")); // Allow your Angular app's origin
 
-		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));// Allowed HTTP
+		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT","PATCH", "DELETE", "OPTIONS"));// Allowed HTTP
 																									// methods for your
 																									// API
 

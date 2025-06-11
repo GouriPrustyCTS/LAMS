@@ -15,7 +15,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.leave.lams.dto.AuthResponse;
 import com.leave.lams.model.AuthRequest;
+import com.leave.lams.model.Employee;
+import com.leave.lams.repository.EmployeeRepository;
 import com.leave.lams.service.EmployeeDetailsService;
 import com.leave.lams.service.TokenBlacklistService;
 import com.leave.lams.util.JwtUtil;
@@ -37,27 +40,41 @@ public class AuthController {
 
 	@Autowired
 	private TokenBlacklistService blacklistService;
+	
+	@Autowired
+	EmployeeRepository employeeRepository;
 
 	private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
-	@PostMapping("/login")
-	public ResponseEntity<?> authenticate(@RequestBody AuthRequest request) {
-		logger.info("Request received: POST /login for user: {}", request.getUsername());
-		try {
-			authenticationManager.authenticate(
-					new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
-		} catch (AuthenticationException ex) {
-			logger.warn("Authentication failed for user {}: {}", request.getUsername(), ex.getMessage());
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
-		}
 
-		final UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
-		final String token = jwtUtil.generateToken(userDetails);
-		
-		logger.info("Login successful for user: {}", request.getUsername());
+@PostMapping("/login")
+public ResponseEntity<?> authenticate(@RequestBody AuthRequest request) {
+    logger.info("Request received: POST /login for user: {}", request.getUsername());
+    try {
+        authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+    } catch (AuthenticationException ex) {
+        logger.warn("Authentication failed for user {}: {}", request.getUsername(), ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+    }
 
-		return ResponseEntity.ok(Collections.singletonMap("token", token));
-	}
+    final UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
+
+
+    Employee employee = employeeRepository.findByEmail(request.getUsername()).orElse(null);
+    long employeeId = 0L;
+    if(employee != null) {
+    	employeeId = employee.getEmployeeId();
+    }
+    final String token = jwtUtil.generateToken(userDetails,employeeId);
+
+    logger.info("Login successful for user: {}", request.getUsername());
+//    if(employee== null) {
+//    	return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+//    }
+    return ResponseEntity.ok(new AuthResponse(token, employee.getEmployeeId()));
+}
+
 
 	@PostMapping("/logout")
 	public ResponseEntity<String> logout(HttpServletRequest request) {

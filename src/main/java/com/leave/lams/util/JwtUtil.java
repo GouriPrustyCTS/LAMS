@@ -33,10 +33,11 @@ public class JwtUtil {
 		return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
 	}
 
-	public String generateToken(UserDetails userDetails) {
+	public String generateToken(UserDetails userDetails, Long employeeId) {
 		return Jwts.builder()
 				.setSubject(userDetails.getUsername())	// sets the subject claim as username(which is unique)
 				.claim("roles", userDetails.getAuthorities())	// adding a claim named "roles".
+				.claim("employeeId", employeeId)
 				.setIssuedAt(new Date())
 				.setExpiration(new Date(System.currentTimeMillis() + 55 * 60 * 1000)) // 5 min
 				.signWith(key)
