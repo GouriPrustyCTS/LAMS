@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -58,6 +59,7 @@ public class ShiftController {
 	}
 
 	@PutMapping("/{id}")
+	@PreAuthorize("hasRole('ADMIN')")
 	public ShiftDTO update(@PathVariable Long id,@Valid @RequestBody ShiftDTO shift) {
 		logger.info("Request received: PUT /shift/{} - Request Body: {}", id, shift);
 		ShiftDTO updatedShift = shiftService.updateShift(id, shift);
@@ -66,6 +68,7 @@ public class ShiftController {
 	}
 
 	@DeleteMapping("/{id}")
+	@PreAuthorize("hasRole('ADMIN')")
 	public void delete(@PathVariable Long id) {
 		logger.info("Request received: DELETE /shift/{}", id);
 		shiftService.deleteShift(id);

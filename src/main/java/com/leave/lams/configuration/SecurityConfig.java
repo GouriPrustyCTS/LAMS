@@ -44,8 +44,10 @@ public class SecurityConfig {
 				.cors(withDefaults()) // Enable CORS using the CorsConfigurationSource bean
 				.authorizeHttpRequests(auth -> auth.requestMatchers("/login", "/register").permitAll()
 						.requestMatchers("/login", "/register", "/employee/details").permitAll()
-						.requestMatchers(HttpMethod.PATCH, "/leaverequest/{id}/status").hasRole("ADMIN")
+						.requestMatchers(HttpMethod.PATCH, "/leaverequests/{id}/status").hasRole("ADMIN")
 						.requestMatchers(HttpMethod.POST, "/shift/add").hasRole("ADMIN")
+						.requestMatchers(HttpMethod.PUT, "/shift/*").hasRole("ADMIN")
+						.requestMatchers(HttpMethod.DELETE, "/shift/*").hasRole("ADMIN")
 						.requestMatchers("/employee/**").hasRole("ADMIN")
 						.requestMatchers(HttpMethod.PUT, "/swap/{id}/status").hasRole("ADMIN")
 						.requestMatchers(HttpMethod.PUT, "/leaveBalances/*").hasRole("ADMIN")
