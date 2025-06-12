@@ -103,6 +103,9 @@ public class AttendanceController {
 			logger.info("Response sent: POST /attendance/clock-in/{} - Employee clocked in.", employeeId);
 			return ResponseEntity.ok("Employee clocked in successfully.");
 		} catch (RuntimeException e) {
+			if(e.getMessage().startsWith("Employee with ID")) {
+				return ResponseEntity.badRequest().body(e.getMessage());
+			}
 			logger.error("Error in clockIn for employeeId: {} - {}", employeeId, e.getMessage());
 			return ResponseEntity.badRequest().body(e.getMessage());
 		}

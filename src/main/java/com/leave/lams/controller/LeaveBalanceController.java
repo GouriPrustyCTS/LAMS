@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,7 +32,7 @@ public class LeaveBalanceController {
 	@Autowired
 	private LeaveBalanceService leaveBalanceService;
 
-	
+	@PreAuthorize("hasRole('ADMIN')")
 	@PostMapping("/add")
 	public LeaveBalanceDTO createLeaveBalance(@Valid @RequestBody LeaveBalanceDTO leaveBalance) {
 		logger.info("Request received: POST /leaveBalances/add - Request Body: {}", leaveBalance);
@@ -40,7 +41,7 @@ public class LeaveBalanceController {
 		return createdLeaveBalance;
 	}
 
-	
+	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/")
 	public List<LeaveBalanceDTO> getAllLeaveBalances() {
 		logger.info("Request received: GET /leaveBalances/");

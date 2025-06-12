@@ -103,6 +103,9 @@ public class EmployeeController {
             details.put("name", employee.getName());
             // Using employee.getDesignation() which returns jobTitle as per your Employee model
             details.put("title", employee.getDesignation());
+            details.put("employeeId",employee.getEmployeeId());
+            details.put("department",employee.getDepartment());
+            details.put("hireDate",employee.getHireDate());
         } else {
             // Fallback if employee details are not found (shouldn't happen if user is authenticated and data is consistent)
             details.put("name", "Unknown User");
@@ -118,4 +121,6 @@ public class EmployeeController {
         logger.info("Response sent: GET /employee/details - Details retrieved for {}", userDetails.getUsername());
         return ResponseEntity.ok(details);
     }
+    
+   
 }

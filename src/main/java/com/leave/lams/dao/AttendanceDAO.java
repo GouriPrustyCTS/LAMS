@@ -3,6 +3,7 @@ package com.leave.lams.dao;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -53,8 +54,6 @@ public class AttendanceDAO implements AttendanceService {
 		return mapper.toDTo(attendanceRepository.save(attendance));
 	}
 
-
-
 	public void deleteAttendance(Long id) {
 		if (!attendanceRepository.existsById(id)) {
 			throw new AttendanceNotFoundException("Attendance record not found with ID: " + id);
@@ -64,73 +63,90 @@ public class AttendanceDAO implements AttendanceService {
 
 	@Override
 	public void clockIn(Long employeeId) {
-        Optional<Employee> employee = employeeRepository.findById(employeeId);
+		Optional<Employee> employee = employeeRepository.findById(employeeId);
 
-        if (employee.isPresent()) {
-            AttendanceDTO attendanceDto = new AttendanceDTO();
-            attendanceDto.setEmployeeId(employeeId);
-            attendanceDto.setName(employee.get().getName());
-            attendanceDto.setClockInTime(LocalDateTime.now());
-            attendanceDto.setAttendanceDate(LocalDate.now());
+		if (employee.isPresent()) {
+			LocalDate currentDate = LocalDate.now();
+			List<AttendanceDTO> todaysDateAttendance = getAttendanceByDate(currentDate);
 
-            Attendance attendance = mapper.toEntity(attendanceDto);
-            attendanceRepository.save(attendance);
-            
-        } else {
-            throw new RuntimeException("Employee not found with ID: " + employeeId);
-        }
+			List<AttendanceDTO> todaysDateAttendanceofEmployee = todaysDateAttendance.stream()
+					.filter(a -> a.getEmployeeId() == employeeId).filter(a -> a.getClockOutTime() == null)
+					.collect(Collectors.toList());
+
+			Optional<AttendanceDTO> minClockTimeAttendance = todaysDateAttendanceofEmployee.stream()
+					.min(Comparator.comparing(AttendanceDTO::getClockInTime));
+
+			AttendanceDTO attendanceDto = new AttendanceDTO();
+			if (minClockTimeAttendance.isPresent()) {
+				attendanceDto = minClockTimeAttendance.get();
+				throw new RuntimeException(
+						"Employee with ID: " + employeeId + " already clocked in at " + attendanceDto.getClockInTime());
+			} else {
+
+				attendanceDto.setEmployeeId(employeeId);
+				attendanceDto.setName(employee.get().getName());
+				attendanceDto.setClockInTime(LocalDateTime.now());
+				attendanceDto.setAttendanceDate(LocalDate.now());
+				Attendance attendance = mapper.toEntity(attendanceDto);
+				attendanceRepository.save(attendance);
+			}
+
+		} else {
+			throw new RuntimeException("Employee not found with ID: " + employeeId);
+		}
 
 	}
 
 	@Override
 	public void clockOut(Long employeeId) {
 		List<Attendance> attendances = attendanceRepository.findLatestByEmployeeId(employeeId);
-        if (attendances.isEmpty()) {
-            throw new AttendanceNotFoundException("Clock-in record not found for employee ID: " + employeeId);
-        }
- 
-        Attendance attendance = attendances.get(0);
-        if (attendance.getClockOutTime() != null) {
-            throw new InvalidInputException("Employee has already clocked out.");
-        }
- 
-        AttendanceDTO attendanceDto = mapper.toDTo(attendance);
-        attendanceDto.setClockOutTime(LocalDateTime.now());
-        attendanceDto.setWorkHours((double) Duration.between(attendanceDto.getClockInTime(), attendanceDto.getClockOutTime()).toHours());
- 
-        attendanceRepository.save(mapper.toEntity(attendanceDto));
+		if (attendances.isEmpty()) {
+			throw new AttendanceNotFoundException("Clock-in record not found for employee ID: " + employeeId);
+		}
+
+		Attendance attendance = attendances.get(0);
+		if (attendance.getClockOutTime() != null) {
+			throw new InvalidInputException("Employee has already clocked out.");
+		}
+
+		AttendanceDTO attendanceDto = mapper.toDTo(attendance);
+		attendanceDto.setClockOutTime(LocalDateTime.now());
+		attendanceDto.setWorkHours(
+				(double) Duration.between(attendanceDto.getClockInTime(), attendanceDto.getClockOutTime()).toHours());
+
+		attendanceRepository.save(mapper.toEntity(attendanceDto));
 
 	}
 
 	@Override
 	public List<AttendanceDTO> getAttendanceByEmployee(Long employeeId) {
-		  List<Attendance> attendances = attendanceRepository.findByEmployee_EmployeeId(employeeId);
-	        if (attendances.isEmpty()) {
-	            throw new AttendanceNotFoundException("No attendance records found for employee ID: " + employeeId);
-	        }
-	        return attendances.stream().map(mapper::toDTo).collect(Collectors.toList());
-	    }
-	 
-	@Override
-    public List<AttendanceDTO> getAttendanceByDate(LocalDate date) {
-        List<Attendance> attendances = attendanceRepository.findByAttendanceDate(date);
-        if (attendances.isEmpty()) {
-            throw new AttendanceNotFoundException("No attendance records found for date: " + date);
-        }
-        return attendances.stream().map(mapper::toDTo).collect(Collectors.toList());
+		List<Attendance> attendances = attendanceRepository.findByEmployee_EmployeeId(employeeId);
+		if (attendances.isEmpty()) {
+			throw new AttendanceNotFoundException("No attendance records found for employee ID: " + employeeId);
+		}
+		return attendances.stream().map(mapper::toDTo).collect(Collectors.toList());
 	}
-	
+
+	@Override
+	public List<AttendanceDTO> getAttendanceByDate(LocalDate date) {
+		List<Attendance> attendances = attendanceRepository.findByAttendanceDate(date);
+		if (attendances.isEmpty()) {
+			throw new AttendanceNotFoundException("No attendance records found for date: " + date);
+		}
+		return attendances.stream().map(mapper::toDTo).collect(Collectors.toList());
+	}
+
 	@Override
 	public Double calculateWorkHours(Long attendanceId) {
-        Attendance attendance = attendanceRepository.findById(attendanceId)
-                .orElseThrow(() -> new AttendanceNotFoundException("Attendance record not found with ID: " + attendanceId));
- 
-        if (attendance.getClockOutTime() == null) {
-            throw new AttendanceNotFoundException("Clock-out time not recorded for attendance ID: " + attendanceId);
-        }
- 
-        return (double) Duration.between(attendance.getClockInTime(), attendance.getClockOutTime()).toHours();
-    }
+		Attendance attendance = attendanceRepository.findById(attendanceId).orElseThrow(
+				() -> new AttendanceNotFoundException("Attendance record not found with ID: " + attendanceId));
+
+		if (attendance.getClockOutTime() == null) {
+			throw new AttendanceNotFoundException("Clock-out time not recorded for attendance ID: " + attendanceId);
+		}
+
+		return (double) Duration.between(attendance.getClockInTime(), attendance.getClockOutTime()).toHours();
+	}
 
 	@Override
 	public AttendanceDTO updateAttendance(Long id, AttendanceDTO attendanceDto) {
@@ -147,6 +163,5 @@ public class AttendanceDAO implements AttendanceService {
 		return mapper.toDTo(attendanceRepository.save(updatedAttendance));
 
 	}
-
 
 }
