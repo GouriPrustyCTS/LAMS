@@ -130,9 +130,7 @@ public class AttendanceDAO implements AttendanceService {
 	@Override
 	public List<AttendanceDTO> getAttendanceByDate(LocalDate date) {
 		List<Attendance> attendances = attendanceRepository.findByAttendanceDate(date);
-		if (attendances.isEmpty()) {
-			throw new AttendanceNotFoundException("No attendance records found for date: " + date);
-		}
+
 		return attendances.stream().map(mapper::toDTo).collect(Collectors.toList());
 	}
 
