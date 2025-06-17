@@ -1,9 +1,12 @@
 package com.leave.lams.dao;
 
+import java.awt.Font;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,11 +16,16 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import org.knowm.xchart.BitmapEncoder;
+import org.knowm.xchart.BitmapEncoder.BitmapFormat;
 import org.knowm.xchart.CategoryChart;
 import org.knowm.xchart.CategoryChartBuilder;
 import org.knowm.xchart.PieChart;
 import org.knowm.xchart.PieChartBuilder;
+import org.knowm.xchart.XYChart;
+import org.knowm.xchart.XYChartBuilder;
 import org.knowm.xchart.style.Styler;
+import org.knowm.xchart.style.colors.XChartSeriesColors; // Correct import for XChart colors
+import org.knowm.xchart.XYSeries; // Needed for setting marker color on series directly
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,22 +37,28 @@ import com.leave.lams.mapper.ReportMapper;
 import com.leave.lams.model.LeaveRequest;
 import com.leave.lams.model.Report;
 import com.leave.lams.repository.AttendanceRepository;
-import com.leave.lams.repository.LeaveRequestRepository;
+import com.leave.lams.repository.LeaveRequestRepository; // Ensure this is imported
 import com.leave.lams.repository.ReportRepository;
 import com.leave.lams.service.ReportService;
 
 @Service
 public class ReportDAO implements ReportService {
-	
-	private static final Logger logger = LoggerFactory.getLogger(ReportDAO.class);
 
-	@Autowired
-	private ReportRepository reportRepository;
-	
-	@Autowired 
-	private ReportMapper mapper;
+    private static final Logger logger = LoggerFactory.getLogger(ReportDAO.class);
 
-	@Override
+    @Autowired
+    private ReportRepository reportRepository;
+
+    @Autowired
+    private ReportMapper mapper;
+
+    @Autowired
+    private LeaveRequestRepository leaveRequestRepository; // Correctly autowired
+
+    @Autowired(required = false)
+    private AttendanceRepository attendanceRepository;
+
+    @Override
     public ReportDTO createReport(ReportDTO reportDto) {
         try {
             Report report = mapper.toEntity(reportDto);
@@ -90,8 +104,8 @@ public class ReportDAO implements ReportService {
             Report existing = reportRepository.findById(id)
                     .orElseThrow(() -> new ReportNotFoundException("Report not found with ID: " + id));
 
-            if (!existing.getEmployee().getEmployeeId().equals(report.getEmployeeId())) {
-                throw new IllegalArgumentException("Employee ID does not match the owner of this record.");
+            if (existing.getEmployee() == null || !existing.getEmployee().getEmployeeId().equals(report.getEmployeeId())) {
+                throw new IllegalArgumentException("Employee ID does not match the owner of this record or employee information is missing.");
             }
 
             existing.setDateRangeStart(report.getDateRangeStart());
@@ -125,219 +139,281 @@ public class ReportDAO implements ReportService {
             throw new RuntimeException("Failed to delete report", e);
         }
     }
-	
-//	______________________________________________________________________________________________________________
-	
-	
-	 @Autowired
-	    private LeaveRequestRepository leaveRequestRepository;
 
-	    @Autowired(required = false) // Make it not required
-	    private AttendanceRepository attendanceRepository;
+    @Override
+    public List<LeaveRequest> getEmployeeLeaveReport(Long employeeId) {
+        logger.info("Fetching leave report for employee ID: {}", employeeId);
+        try {
+            // CORRECTED: Using findByEmployee_EmployeeId as per your repository
+            List<LeaveRequest> employeeLeaves = leaveRequestRepository.findByEmployee_EmployeeId(employeeId);
+            if (employeeLeaves.isEmpty()) {
+                logger.warn("No leave requests found for employee ID: {}", employeeId);
+            }
+            return employeeLeaves;
+        } catch (Exception e) {
+            logger.error("Error fetching leave report for employee ID {}: {}", employeeId, e.getMessage());
+            throw new RuntimeException("Failed to retrieve employee leave report", e);
+        }
+    }
 
-	    public PieChart generatePieChart() {
-	        logger.info("Generating pie chart...");
-	        List<Map<String, Object>> leaveCounts = leaveRequestRepository.countLeaveReasons();
-	        logger.info("Leave counts retrieved: {}", leaveCounts);
+    @Override
+    public PieChart generatePieChart() {
+        logger.info("Generating pie chart...");
+        List<Map<String, Object>> leaveCounts = leaveRequestRepository.countLeaveReasons();
+        logger.info("Leave counts retrieved: {}", leaveCounts);
 
-	        PieChart chart = new PieChartBuilder().title("Employee Leave Reasons").build();
+        PieChart chart = new PieChartBuilder().title("Employee Leave Reasons").build();
 
-	        if (leaveCounts != null && !leaveCounts.isEmpty()) {
-	            for (Map<String, Object> leaveData : leaveCounts) {
-	                String reason = (String) leaveData.get("reason");
-	                Number count = (Number) leaveData.get("count");
-	                if (reason != null && count != null) {
-	                    logger.info("Adding slice - Reason: {}, Count: {}", reason, count);
-	                    chart.addSeries(reason, count);
-	                } else {
-	                    logger.warn("Skipping invalid leave data: reason={}, count={}", reason, count);
-	                }
-	            }
-	        } else {
-	            logger.warn("No leave data found to populate the chart.");
-	        }
+        if (leaveCounts != null && !leaveCounts.isEmpty()) {
+            for (Map<String, Object> leaveData : leaveCounts) {
+                String reason = (String) leaveData.get("reason");
+                Number count = (Number) leaveData.get("count");
+                if (reason != null && count != null) {
+                    logger.info("Adding slice - Reason: {}, Count: {}", reason, count);
+                    chart.addSeries(reason, count);
+                } else {
+                    logger.warn("Skipping invalid leave data: reason={}, count={}", reason, count);
+                }
+            }
+        } else {
+            logger.warn("No leave data found to populate the chart.");
+        }
 
-	        return chart;
-	    }
+        return chart;
+    }
 
-	    public byte[] generateTimeDifferenceBarChart(Long empId) throws IOException {
-	        logger.info("Generating clock-in/clock-out time difference bar chart for employee ID: {}", empId);
-	        List<Map<String, Object>> timeEntries = null;
-	        if (attendanceRepository != null) {
-	            try {
-	                if (empId != null) {
-	                    timeEntries = attendanceRepository.getClockInOutDataByEmpId(empId); // Assuming you have this method
-	                    logger.info("Retrieved clock-in/clock-out data for employee {}: {}", empId, timeEntries);
-	                } else {
-	                    timeEntries = attendanceRepository.getClockInOutData(); // Fetch all data if no empId is provided
-	                    logger.info("Retrieved all clock-in/clock-out data: {}", timeEntries);
-	                }
-	            } catch (Exception e) {
-	                logger.error("Error fetching clock-in/clock-out data: {}", e.getMessage());
-	                timeEntries = new ArrayList<>();
-	            }
+    @Override
+    public byte[] generateTimeDifferenceBarChart(Long empId) throws IOException {
+        logger.info("Generating clock-in/clock-out time difference bar chart for employee ID: {}", empId);
+        List<Map<String, Object>> timeEntries = null;
+        if (attendanceRepository != null) {
+            try {
+                if (empId != null) {
+                    timeEntries = attendanceRepository.getClockInOutDataByEmpId(empId);
+                    logger.info("Retrieved clock-in/clock-out data for employee {}: {}", empId, timeEntries);
+                } else {
+                    timeEntries = attendanceRepository.getClockInOutData();
+                    logger.info("Retrieved all clock-in/clock-out data: {}", timeEntries);
+                }
+            } catch (Exception e) {
+                logger.error("Error fetching clock-in/clock-out data: {}", e.getMessage());
+                timeEntries = new ArrayList<>();
+            }
 
-	            List<String> employeeAndDate = new ArrayList<>();
-	            List<Double> timeDifferencesInHours = new ArrayList<>();
-	            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            List<String> employeeAndDate = new ArrayList<>();
+            List<Double> timeDifferencesInHours = new ArrayList<>();
+            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-	            if (timeEntries != null && !timeEntries.isEmpty()) {
-	                for (Map<String, Object> entry : timeEntries) {
-	                    Long currentEmpId = (Long) entry.get("empId");
-	                    String empName = (String) entry.get("empName");
-	                    LocalDateTime clockInTime = (LocalDateTime) entry.get("clockInTime");
-	                    LocalDateTime clockOutTime = (LocalDateTime) entry.get("clockOutTime");
-	                    LocalDate date = (LocalDate) entry.get("date");
+            if (timeEntries != null && !timeEntries.isEmpty()) {
+                for (Map<String, Object> entry : timeEntries) {
+                    Long currentEmpId = ((Number) entry.get("empId")).longValue();
+                    String empName = (String) entry.get("empName");
+                    LocalDateTime clockInTime = (LocalDateTime) entry.get("clockInTime");
+                    LocalDateTime clockOutTime = (LocalDateTime) entry.get("clockOutTime");
+                    LocalDate date = (LocalDate) entry.get("date");
 
-	                    if (clockInTime != null && clockOutTime != null && date != null && currentEmpId != null && empName != null) {
-	                        java.time.Duration duration = java.time.Duration.between(clockInTime, clockOutTime);
-	                        double diffInHours = (double) duration.toMinutes() / 60.0;
-	                        employeeAndDate.add(empName + " (" + currentEmpId + ")\n" + date.format(dateFormatter));
-	                        timeDifferencesInHours.add(diffInHours);
-	                    } else {
-	                        logger.warn("Incomplete clock-in/clock-out data found: {}", entry);
-	                    }
-	                }
-	            } else {
-	                logger.warn("No clock-in/clock-out data found for employee ID: {}", empId);
-	            }
+                    if (clockInTime != null && clockOutTime != null && date != null && currentEmpId != null && empName != null) {
+                        java.time.Duration duration = java.time.Duration.between(clockInTime, clockOutTime);
+                        double diffInHours = (double) duration.toMinutes() / 60.0;
+                        employeeAndDate.add(empName + " (" + currentEmpId + ")\n" + date.format(dateFormatter));
+                        timeDifferencesInHours.add(diffInHours);
+                    } else {
+                        logger.warn("Incomplete clock-in/clock-out data found: {}", entry);
+                    }
+                }
+            } else {
+                logger.warn("No clock-in/clock-out data found for employee ID: {}", empId);
+            }
 
-	            CategoryChart chart = new CategoryChartBuilder()
-	                    .width(800)
-	                    .height(600)
-	                    .title("Time Spent at Office")
-	                    .xAxisTitle("Employee (ID) - Date")
-	                    .yAxisTitle("Time (Hours)")
-	                    .build();
-	            chart.getStyler().setLegendPosition(Styler.LegendPosition.InsideNW);
-	            chart.getStyler().setOverlapped(true);
-	            chart.getStyler().setXAxisLabelRotation(45);
+            CategoryChart chart = new CategoryChartBuilder()
+                    .width(950)
+                    .height(500)
+                    .title("Time Spent at Office")
+                    .xAxisTitle("Employee (ID) - Date")
+                    .yAxisTitle("Time (Hours)")
+                    .build();
+            chart.getStyler().setLegendPosition(Styler.LegendPosition.InsideNW);
+            chart.getStyler().setOverlapped(true);
+            chart.getStyler().setXAxisLabelRotation(45);
 
-	            if (!employeeAndDate.isEmpty() && !timeDifferencesInHours.isEmpty()) {
-	                chart.addSeries("Time Spent", employeeAndDate, timeDifferencesInHours);
-	            }
+            if (!employeeAndDate.isEmpty() && !timeDifferencesInHours.isEmpty()) {
+                chart.addSeries("Time Spent", employeeAndDate, timeDifferencesInHours);
+            }
 
-	            return BitmapEncoder.getBitmapBytes(chart, BitmapEncoder.BitmapFormat.PNG);
-	        } else {
-	            logger.warn("TruTimeRepository is not available, cannot generate time difference bar chart.");
-	            return new byte[0]; // Return an empty byte array or handle as needed
-	        }
-	    }
+            return BitmapEncoder.getBitmapBytes(chart, BitmapEncoder.BitmapFormat.PNG);
+        } else {
+            logger.warn("AttendanceRepository is not available, cannot generate time difference bar chart.");
+            return new byte[0];
+        }
+    }
 
-	    public byte[] generateMonthWiseLeaveCountLineChart() throws IOException {
-	        logger.info("Generating month-wise leave count line chart...");
-	        List<LeaveRequest> allLeaves = leaveRequestRepository.findAll();
-	        Map<YearMonth, Integer> monthlyCounts = new TreeMap<>();
-	        DateTimeFormatter yearMonthFormatter = DateTimeFormatter.ofPattern("yyyy-MM");
+    @Override
+    public byte[] generateMonthWiseLeaveCountLineChart() throws IOException {
+        logger.info("Generating month-wise leave count line chart...");
+        List<LeaveRequest> allLeaves = leaveRequestRepository.findAll();
+        Map<YearMonth, Integer> monthlyCounts = new TreeMap<>();
 
-	        for (LeaveRequest leave : allLeaves) {
-	            LocalDate startDate = (LocalDate) leave.getStartDate();
-	            LocalDate endDate = (LocalDate) leave.getEndDate();
+        for (LeaveRequest leave : allLeaves) {
+            LocalDate startDate = leave.getStartDate();
+            LocalDate endDate = leave.getEndDate();
 
-	            logger.info("Processing leave for month-wise - Start Date: {}, End Date: {}", startDate, endDate);
+            if (startDate != null && endDate != null) {
+                LocalDate currentDate = startDate;
+                while (!currentDate.isAfter(endDate)) {
+                    YearMonth yearMonth = YearMonth.from(currentDate);
+                    monthlyCounts.put(yearMonth, monthlyCounts.getOrDefault(yearMonth, 0) + 1);
+                    currentDate = currentDate.plusDays(1);
+                }
+            } else if (startDate != null) {
+                YearMonth yearMonth = YearMonth.from(startDate);
+                monthlyCounts.put(yearMonth, monthlyCounts.getOrDefault(yearMonth, 0) + 1);
+            }
+        }
 
-	            if (startDate != null && endDate != null) {
-	                LocalDate currentDate = startDate;
-	                while (!currentDate.isAfter(endDate)) {
-	                    YearMonth yearMonth = YearMonth.from(currentDate);
-	                    monthlyCounts.put(yearMonth, monthlyCounts.getOrDefault(yearMonth, 0) + 1);
-	                    currentDate = currentDate.plusDays(1);
-	                }
-	            } else if (startDate != null) {
-	                YearMonth yearMonth = YearMonth.from(startDate);
-	                monthlyCounts.put(yearMonth, monthlyCounts.getOrDefault(yearMonth, 0) + 1);
-	            }
-	        }
+        logger.info("Final monthlyCounts: {}", monthlyCounts);
 
-	        logger.info("Final monthlyCounts: {}", monthlyCounts);
+        List<java.util.Date> xData = new ArrayList<>();
+        List<Double> yData = new ArrayList<>();
 
-	        List<String> months = new ArrayList<>();
-	        List<Integer> counts = new ArrayList<>();
-	        for (Map.Entry<YearMonth, Integer> entry : monthlyCounts.entrySet()) {
-	            months.add(entry.getKey().format(yearMonthFormatter));
-	            counts.add(entry.getValue());
-	        }
+        for (Map.Entry<YearMonth, Integer> entry : monthlyCounts.entrySet()) {
+            xData.add(java.util.Date.from(entry.getKey().atDay(1).atStartOfDay(ZoneId.systemDefault()).toInstant()));
+            yData.add(entry.getValue().doubleValue());
+        }
 
-	        CategoryChart chart = new CategoryChartBuilder()
-	                .width(800)
-	                .height(600)
-	                .title("Month-wise Leave Count")
-	                .xAxisTitle("Year-Month")
-	                .yAxisTitle("Number of Leaves")
-	                .build();
-	        chart.getStyler().setLegendVisible(false);
-	        chart.getStyler().setXAxisLabelRotation(45);
+        XYChart chart = new XYChartBuilder()
+                .width(950)
+                .height(500)
+                .title("Month-wise Leave Count")
+                .xAxisTitle("Month/Year")
+                .yAxisTitle("Number of Leaves")
+                .theme(Styler.ChartTheme.GGPlot2)
+                .build();
 
-	        if (!months.isEmpty() && !counts.isEmpty()) {
-	            chart.addSeries("Leave Count", months, counts);
-	            return BitmapEncoder.getBitmapBytes(chart, BitmapEncoder.BitmapFormat.PNG);
-	        } else {
-	            logger.warn("No monthly leave data found to populate the line chart.");
-	            // Return a default image or handle the empty chart scenario as needed.
-	            return BitmapEncoder.getBitmapBytes(chart, BitmapEncoder.BitmapFormat.PNG); // Return empty chart.
-	        }
-	    }
+        chart.getStyler().setLegendVisible(false);
+        chart.getStyler().setXAxisLabelRotation(45);
+        chart.getStyler().setYAxisMin(0.0);
+        chart.getStyler().setDatePattern("yyyy-MM");
+        chart.getStyler().setMarkerSize(8);
 
-	    public byte[] generateYearWiseLeaveCountLineChart() throws IOException {
-	        logger.info("Generating year-wise leave count line chart...");
-	        List<LeaveRequest> allLeaves = leaveRequestRepository.findAll();
-	        Map<Integer, Integer> yearlyCounts = new TreeMap<>();
+        // --- Start of Month-wise Chart Color Customization ---
+        // Series colors are set on the styler for the overall chart appearance
+        chart.getStyler().setSeriesColors(new java.awt.Color[]{XChartSeriesColors.BLUE.getColor(null)}); // Data line color
 
-	        for (LeaveRequest leave : allLeaves) {
-	            LocalDate startDate = leave.getStartDate();
-	            LocalDate endDate = leave.getEndDate();
+        chart.getStyler().setChartBackgroundColor(java.awt.Color.decode("#F0F8FF")); // Alice Blue
+        chart.getStyler().setPlotBackgroundColor(java.awt.Color.decode("#E6F2FF")); // Lighter Blue
+        chart.getStyler().setPlotGridLinesVisible(true);
 
-	            logger.info("Processing leave for year-wise - Start Date: {}, End Date: {}", startDate, endDate);
+        // CORRECTED: Use setPlotGridLinesColor for grid line color
+        chart.getStyler().setPlotGridLinesColor(java.awt.Color.GRAY); // Grid line color
 
-	            if (startDate != null && endDate != null) {
-	                int startYear = startDate.getYear();
-	                int endYear = endDate.getYear();
-	                for (int year = startYear; year <= endYear; year++) {
-	                    yearlyCounts.put(year, yearlyCounts.getOrDefault(year, 0) + 1);
-	                    logger.info("Incrementing year {} count", year);
-	                }
-	            } else if (startDate != null) {
-	                int year = startDate.getYear();
-	                yearlyCounts.put(year, yearlyCounts.getOrDefault(year, 0) + 1);
-	                logger.info("Incrementing year {} count (start date only)", year);
-	            }
-	        }
+        chart.getStyler().setAxisTickLabelsFont(new Font("Arial", Font.PLAIN, 10));
+        chart.getStyler().setAxisTitleFont(new Font("Arial", Font.BOLD, 12));
+        chart.getStyler().setChartTitleFont(new Font("Arial", Font.BOLD, 14));
+        chart.getStyler().setAxisTickLabelsColor(java.awt.Color.DARK_GRAY);
+        chart.getStyler().setChartTitleBoxBackgroundColor(java.awt.Color.decode("#ADD8E6")); // Light Blue for title box
+        chart.getStyler().setChartTitleBoxVisible(true);
+        chart.getStyler().setChartTitleBoxBorderColor(java.awt.Color.BLUE);
+        // --- End of Month-wise Chart Color Customization ---
 
-	        logger.info("Final yearlyCounts: {}", yearlyCounts);
+        if (!xData.isEmpty() && !yData.isEmpty()) {
+            XYSeries series = chart.addSeries("Leave Count", xData, yData);
+            // CORRECTED: Set marker color directly on the series if different from line color
+            series.setMarkerColor(XChartSeriesColors.BLUE.getColor(null)); // Example: same as line color
+        } else {
+            logger.warn("No monthly leave data found to populate the line chart. Adding 'No Data' series.");
+            XYSeries noDataSeries = chart.addSeries("No Data", new ArrayList<java.util.Date>(), new ArrayList<Double>());
+            noDataSeries.setLineColor(java.awt.Color.DARK_GRAY);
+            // CORRECTED: Set marker color directly on the 'No Data' series
+            noDataSeries.setMarkerColor(java.awt.Color.DARK_GRAY);
+            chart.setTitle("Month-wise Leave Count (No Data Available)");
+        }
 
-	        List<Integer> years = new ArrayList<>();
-	        List<Integer> counts = new ArrayList<>();
-	        for (Map.Entry<Integer, Integer> entry : yearlyCounts.entrySet()) {
-	            years.add(entry.getKey());
-	            counts.add(entry.getValue());
-	        }
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        BitmapEncoder.saveBitmap(chart, os, BitmapFormat.PNG);
+        return os.toByteArray();
+    }
 
-	        CategoryChart chart = new CategoryChartBuilder()
-	                .width(800)
-	                .height(600)
-	                .title("Year-wise Leave Count")
-	                .xAxisTitle("Year")
-	                .yAxisTitle("Number of Leaves")
-	                .build();
-	        chart.getStyler().setLegendVisible(false);
+    @Override
+    public byte[] generateYearWiseLeaveCountLineChart() throws IOException {
+        logger.info("Generating year-wise leave count line chart...");
+        List<LeaveRequest> allLeaves = leaveRequestRepository.findAll();
+        Map<Integer, Integer> yearlyCounts = new TreeMap<>();
 
-	        if (!years.isEmpty() && !counts.isEmpty()) {
-	            chart.addSeries("Leave Count", years, counts);
-	            return BitmapEncoder.getBitmapBytes(chart, BitmapEncoder.BitmapFormat.PNG);
-	        } else {
-	            logger.warn("No yearly leave data found to populate the line chart.");
-	            return BitmapEncoder.getBitmapBytes(chart, BitmapEncoder.BitmapFormat.PNG); // Complete return statement
-	        }
-	    }
+        for (LeaveRequest leave : allLeaves) {
+            LocalDate startDate = leave.getStartDate();
+            LocalDate endDate = leave.getEndDate();
 
-	    public List<LeaveRequest> getEmployeeLeaveReport(Long employeeId) {
-	        logger.info("Fetching leave report for employee ID: {}", employeeId);
-	        List<LeaveRequest> empLeaves = leaveRequestRepository.findByEmployee_EmployeeId(employeeId);
-	        if (empLeaves == null) {
-	            logger.warn("No leaves found for employee ID: {}", employeeId);
-	            return new ArrayList<>();
-	        }
-	        return empLeaves;
-	    }
+            if (startDate != null && endDate != null) {
+                LocalDate currentDate = startDate;
+                while (!currentDate.isAfter(endDate)) {
+                    yearlyCounts.put(currentDate.getYear(), yearlyCounts.getOrDefault(currentDate.getYear(), 0) + 1);
+                    currentDate = currentDate.plusDays(1);
+                }
+            } else if (startDate != null) {
+                int year = startDate.getYear();
+                yearlyCounts.put(year, yearlyCounts.getOrDefault(year, 0) + 1);
+                logger.info("Incrementing year {} count (start date only)", year);
+            }
+        }
 
+        logger.info("Final yearlyCounts: {}", yearlyCounts);
+
+        List<Double> years = new ArrayList<>();
+        List<Double> counts = new ArrayList<>();
+
+        for (Map.Entry<Integer, Integer> entry : yearlyCounts.entrySet()) {
+            years.add(entry.getKey().doubleValue());
+            counts.add(entry.getValue().doubleValue());
+        }
+
+        XYChart chart = new XYChartBuilder()
+                .width(950)
+                .height(500)
+                .title("Year-wise Leave Count")
+                .xAxisTitle("Year")
+                .yAxisTitle("Number of Leaves")
+                .theme(Styler.ChartTheme.GGPlot2)
+                .build();
+
+        chart.getStyler().setLegendVisible(false);
+        chart.getStyler().setXAxisLabelRotation(0);
+        chart.getStyler().setYAxisMin(0.0);
+        chart.getStyler().setMarkerSize(8);
+
+        // --- Start of Year-wise Chart Color Customization ---
+        chart.getStyler().setSeriesColors(new java.awt.Color[]{XChartSeriesColors.MAGENTA.getColor(null)}); // Data line color
+
+        chart.getStyler().setChartBackgroundColor(java.awt.Color.decode("#FFF5EE")); // SeaShell
+        chart.getStyler().setPlotBackgroundColor(java.awt.Color.decode("#F5F5DC")); // Beige
+        chart.getStyler().setPlotGridLinesVisible(true);
+
+        // CORRECTED: Use setPlotGridLinesColor for grid line color
+        chart.getStyler().setPlotGridLinesColor(java.awt.Color.DARK_GRAY); // Grid line color
+
+        chart.getStyler().setAxisTickLabelsFont(new Font("Arial", Font.PLAIN, 10));
+        chart.getStyler().setAxisTitleFont(new Font("Arial", Font.BOLD, 12));
+        chart.getStyler().setChartTitleFont(new Font("Arial", Font.BOLD, 14));
+        chart.getStyler().setAxisTickLabelsColor(java.awt.Color.BLACK);
+        chart.getStyler().setChartTitleBoxBackgroundColor(java.awt.Color.decode("#FFE4B5")); // Moccasin
+        chart.getStyler().setChartTitleBoxVisible(true);
+        chart.getStyler().setChartTitleBoxBorderColor(java.awt.Color.ORANGE);
+        // --- End of Year-wise Chart Color Customization ---
+
+        if (!years.isEmpty() && !counts.isEmpty()) {
+            XYSeries series = chart.addSeries("Leave Count", years, counts);
+            // CORRECTED: Set marker color directly on the series if different from line color
+            series.setMarkerColor(XChartSeriesColors.MAGENTA.getColor(null)); // Example: same as line color
+        } else {
+            logger.warn("No yearly leave data found to populate the line chart. Adding 'No Data' series.");
+            XYSeries noDataSeries = chart.addSeries("No Data", new double[]{0}, new double[]{0});
+            noDataSeries.setLineColor(java.awt.Color.DARK_GRAY);
+            // CORRECTED: Set marker color directly on the 'No Data' series
+            noDataSeries.setMarkerColor(java.awt.Color.DARK_GRAY);
+            chart.setTitle("Year-wise Leave Count (No Data Available)");
+        }
+
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        BitmapEncoder.saveBitmap(chart, os, BitmapFormat.PNG);
+        return os.toByteArray();
+    }
 }
