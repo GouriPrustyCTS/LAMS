@@ -40,41 +40,36 @@ public class AuthController {
 
 	@Autowired
 	private TokenBlacklistService blacklistService;
-	
+
 	@Autowired
 	EmployeeRepository employeeRepository;
 
 	private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
+	@PostMapping("/login")
+	public ResponseEntity<?> authenticate(@RequestBody AuthRequest request) {
+		logger.info("Request received: POST /login for user: {}", request.getUsername());
+		try {
+			authenticationManager.authenticate(
+					new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+		} catch (AuthenticationException ex) {
+			logger.warn("Authentication failed for user {}: {}", request.getUsername(), ex.getMessage());
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+		}
 
-@PostMapping("/login")
-public ResponseEntity<?> authenticate(@RequestBody AuthRequest request) {
-    logger.info("Request received: POST /login for user: {}", request.getUsername());
-    try {
-        authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
-    } catch (AuthenticationException ex) {
-        logger.warn("Authentication failed for user {}: {}", request.getUsername(), ex.getMessage());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
-    }
+		final UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
 
-    final UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
+		Employee employee = employeeRepository.findByEmail(request.getUsername()).orElse(null);
+		long employeeId = 0L;
+		if (employee != null) {
+			employeeId = employee.getEmployeeId();
+		}
+		final String token = jwtUtil.generateToken(userDetails, employeeId);
 
+		logger.info("Login successful for user: {}", request.getUsername());
 
-    Employee employee = employeeRepository.findByEmail(request.getUsername()).orElse(null);
-    long employeeId = 0L;
-    if(employee != null) {
-    	employeeId = employee.getEmployeeId();
-    }
-    final String token = jwtUtil.generateToken(userDetails,employeeId);
-
-    logger.info("Login successful for user: {}", request.getUsername());
-//    if(employee== null) {
-//    	return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
-//    }
-    return ResponseEntity.ok(new AuthResponse(token, employeeId));
-}
-
+		return ResponseEntity.ok(new AuthResponse(token, employeeId));
+	}
 
 	@PostMapping("/logout")
 	public ResponseEntity<String> logout(HttpServletRequest request) {

@@ -8,6 +8,7 @@ import org.knowm.xchart.PieChart;
 import org.springframework.stereotype.Service;
 
 import com.leave.lams.dto.ReportDTO;
+import com.leave.lams.model.LeaveRequest;
 
 @Service
 public interface ReportService {
@@ -29,4 +30,6 @@ public interface ReportService {
 	public byte[] generateMonthWiseLeaveCountLineChart() throws IOException;
 
 	public byte[] generateYearWiseLeaveCountLineChart() throws IOException;
+	
+	List<LeaveRequest> getEmployeeLeaveReport(Long employeeId);
 }

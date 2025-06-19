@@ -13,6 +13,7 @@ public class LamsApplication {
 }
 
 
+
 /*	API documentation
  * 
  AUTH
