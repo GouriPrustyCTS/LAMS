@@ -32,13 +32,13 @@ public class AttendanceDAOTest {
     @InjectMocks
     private AttendanceDAO attendanceService; // Concrete class
 
-    @Mock
+    @InjectMocks
     private AttendanceRepository attendanceRepository;
 
-    @Mock
+    @InjectMocks
     private EmployeeRepository employeeRepository;
 
-    @Mock
+    @InjectMocks
     private AttendanceMapper attendanceMapper;
 
     private AttendanceDTO dto1, dto2, dto;

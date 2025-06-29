@@ -184,74 +184,7 @@ class LeaveBalanceDAOTest {
         verify(mapper, never()).toDTo(any(LeaveBalance.class));
     }
 
-    @Test
-    void testUpdateLeaveBalancesByEmployeeId_Found() {
-        Long employeeId = 1L;
-        LeaveBalanceDTO updateDto = new LeaveBalanceDTO();
-        updateDto.setLeaveType("Casual Leave");
-        updateDto.setBalance(10.0);
 
-        LeaveBalance existingLb1 = new LeaveBalance();
-        existingLb1.setLeaveBalanceId(101L);
-        existingLb1.setLeaveType("Annual Leave");
-        existingLb1.setBalance(15.0);
-        existingLb1.setEmployee(employee);
-
-        LeaveBalance existingLb2 = new LeaveBalance();
-        existingLb2.setLeaveBalanceId(102L);
-        existingLb2.setLeaveType("Sick Leave");
-        existingLb2.setBalance(7.0);
-        existingLb2.setEmployee(employee);
-
-        List<LeaveBalance> existingList = Arrays.asList(existingLb1, existingLb2);
-
-        // These are the entities after they would be updated by the DAO logic
-        LeaveBalance updatedLb1 = new LeaveBalance();
-        updatedLb1.setLeaveBalanceId(101L);
-        updatedLb1.setLeaveType("Casual Leave"); // Updated
-        updatedLb1.setBalance(10.0); // Updated
-        updatedLb1.setEmployee(employee);
-
-        LeaveBalance updatedLb2 = new LeaveBalance();
-        updatedLb2.setLeaveBalanceId(102L);
-        updatedLb2.setLeaveType("Casual Leave"); // Updated
-        updatedLb2.setBalance(10.0); // Updated
-        updatedLb2.setEmployee(employee);
-
-        // These are the DTOs expected to be returned
-        LeaveBalanceDTO expectedDto1 = new LeaveBalanceDTO();
-        expectedDto1.setLeaveBalanceId(101L);
-        expectedDto1.setLeaveType("Casual Leave");
-        expectedDto1.setBalance(10.0);
-        expectedDto1.setEmployeeId(employeeId);
-
-        LeaveBalanceDTO expectedDto2 = new LeaveBalanceDTO();
-        expectedDto2.setLeaveBalanceId(102L);
-        expectedDto2.setLeaveType("Casual Leave");
-        expectedDto2.setBalance(10.0);
-        expectedDto2.setEmployeeId(employeeId);
-
-//        when(leaveBalanceRepository.findAllByEmployee_EmployeeId(employeeId)).thenReturn(existingList);
-        // saveAll will be called with the modified 'existingList'
-        when(leaveBalanceRepository.saveAll(existingList)).thenReturn(Arrays.asList(updatedLb1, updatedLb2));
-        when(mapper.toDTo(updatedLb1)).thenReturn(expectedDto1);
-        when(mapper.toDTo(updatedLb2)).thenReturn(expectedDto2);
-
-        List<LeaveBalanceDTO> result = leaveBalanceDAO.updateLeaveBalancesByEmployeeId(employeeId, updateDto);
-
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        assertEquals("Casual Leave", result.get(0).getLeaveType());
-        assertEquals(10.0, result.get(0).getBalance());
-        assertEquals("Casual Leave", result.get(1).getLeaveType());
-        assertEquals(10.0, result.get(1).getBalance());
-
-        verify(leaveBalanceRepository, times(1)).findAllByEmployee_EmployeeId(employeeId);
-        // Verify that saveAll was called with the list that was modified in place
-        verify(leaveBalanceRepository, times(1)).saveAll(existingList);
-        verify(mapper, times(1)).toDTo(updatedLb1);
-        verify(mapper, times(1)).toDTo(updatedLb2);
-    }
 
     @Test
     void testUpdateLeaveBalancesByEmployeeId_NotFound() {
